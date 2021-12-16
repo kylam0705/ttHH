@@ -3,16 +3,16 @@ import awkward
 import numpy
 import matplotlib.pyplot as plt
 from yahist import Hist1D
-#import argparse
+import argparse
 
-#def parse_arguments():
-#	parser =argparse.ArgumentParser()
-#	parser.add_argument(
-#		"--sideband_cut",
-#		required = False,
-#		default = None,
-#		type = str,
-#		help = "places a cut to establish sideband definition")
+parser = argparse.ArgumentParser()
+parser.add_argument(
+	"--sideband_cut",
+	required = True,
+	default = None,
+	type = str,
+	help = "Places a cut to establish the sideband definition")
+args = parser.parse_args()
 
 events_awkward = awkward.from_parquet("/home/users/smay/public_html/forKyla/merged_nominal.parquet")
 events = awkward.to_pandas(events_awkward)
@@ -20,7 +20,9 @@ events = awkward.to_pandas(events_awkward)
 #Data
 events_data = events[events["process_id"] == 14]
 events_data["MinPhoton_mvaID"] = events_data[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis=1)
-sideband_cut = events_data[events_data["MinPhoton_mvaID"] < 0.0]
+def cut_on_sideband(mvaID):
+	sideband_cut = events_data[events_data["MinPhoton_mvaID"] < mvaID]
+	return sideband_cut
 
 #Gamma + Jets Process:
 events_GJets = events[(events["process_id"] >= 15) & (events["process_id"] <=19)]
@@ -55,7 +57,7 @@ p = h_fake.counts #p-value in the random.choice function
 
 #PDF Function
 
-fake_photons_pdf = numpy.random.choice(a=14, size=sideband_cut.size, p=h_fake.counts[6:20])
+fake_photons_pdf = numpy.random.choice(a=14, size=cut_on_sideband(args.sideband_cut).size, p=h_fake.counts[6:20].normalize())
  
 h_pdf = Hist1D(fake_photons_pdf, bins = "40,-1,1") #This is the pdf that needs to be plotted in a histogram
 h_pdf.plot(histtype="stepfilled", alpha = 0.8)
