@@ -21,7 +21,7 @@ events = awkward.to_pandas(events_awkward)
 events_data = events[events["process_id"] == 14]
 events_data["MinPhoton_mvaID"] = events_data[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis=1)
 sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideband_cut]
-print(sideband_cut.size)
+#print(sideband_cut.size)
 
 #Gamma + Jets Process:
 events_GJets = events[(events["process_id"] >= 15) & (events["process_id"] <=19)]
@@ -51,17 +51,18 @@ fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fa
 f = plt.figure()
 h_fake = Hist1D(fake_id, bins = "40,-1,1") #Histogram of fake photons from fake_id array
 h_fake = h_fake.normalize()
-p = h_fake.counts[6:20] #p-value in the random.choice function
-#print(p)
+p_bins = h_fake.counts[6:20] #p-value in the random.choice function
+p = p_bins/numpy.sum(p_bins)
+#print(numpy.sum(p))
 
 #PDF Function
 
-fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=numpy.linalg.norm(p))
- 
-h_pdf = Hist1D(fake_photons_pdf, bins = "40,-1,1") #This is the pdf that needs to be plotted in a histogram
+fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=p)
+
+h_pdf = Hist1D(fake_photons_pdf, bins = "40,-1,1", label = "Random Function") #This is the pdf that needs to be plotted in a histogram
 h_pdf.plot(histtype="stepfilled", alpha = 0.8)
 
-h_fake.plot(histtype="stepfilled", alpha = 0.8)
+h_fake.plot(histtype="stepfilled", alpha = 0.8, label = "Fake Photons fron GJets")
 plt.yscale("log")
 plt.title("Fake Photon IDMVA in GJets")
 plt.xlabel("IDMVA Score")
