@@ -10,7 +10,7 @@ parser.add_argument(
 	"--sideband_cut",
 	required = True,
 	default = None,
-	type = str,
+	type = float,
 	help = "Places a cut to establish the sideband definition")
 args = parser.parse_args()
 
@@ -20,9 +20,8 @@ events = awkward.to_pandas(events_awkward)
 #Data
 events_data = events[events["process_id"] == 14]
 events_data["MinPhoton_mvaID"] = events_data[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis=1)
-def cut_on_sideband(mvaID):
-	sideband_cut = events_data[events_data["MinPhoton_mvaID"] < mvaID]
-	return sideband_cut
+sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideband_cut]
+print(sideband_cut.size)
 
 #Gamma + Jets Process:
 events_GJets = events[(events["process_id"] >= 15) & (events["process_id"] <=19)]
@@ -52,12 +51,12 @@ fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fa
 f = plt.figure()
 h_fake = Hist1D(fake_id, bins = "40,-1,1") #Histogram of fake photons from fake_id array
 h_fake = h_fake.normalize()
-p = h_fake.counts #p-value in the random.choice function
+p = h_fake.counts[6:20] #p-value in the random.choice function
 #print(p)
 
 #PDF Function
 
-fake_photons_pdf = numpy.random.choice(a=14, size=cut_on_sideband(args.sideband_cut).size, p=h_fake.counts[6:20].normalize())
+fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=numpy.linalg.norm(p))
  
 h_pdf = Hist1D(fake_photons_pdf, bins = "40,-1,1") #This is the pdf that needs to be plotted in a histogram
 h_pdf.plot(histtype="stepfilled", alpha = 0.8)
