@@ -12,8 +12,14 @@ parser.add_argument(
 	default = None,
 	type = float,
 	help = "Places a cut to establish the sideband definition")
+#parser.add_argument(
+#	"--input_parquet",
+#	required = False,
+#	default = None, 
+#	help = "Path to parquet file")
 args = parser.parse_args()
 
+#events_awkward = awkward.from_parquet(args.input_parquet)
 events_awkward = awkward.from_parquet("/home/users/smay/public_html/forKyla/merged_nominal.parquet")
 events = awkward.to_pandas(events_awkward)
 
@@ -47,16 +53,14 @@ fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fa
 #events_photon_sideband_cut = events[events["MinPhoton_mvaID"] > -0.67]
 #events_photon_preselection_cut = events[events["max_pho_idmva"] > -0.67]
 
-#Making the PDF Histogram
+#Making the Fake PDF Histogram
 f = plt.figure()
 h_fake = Hist1D(fake_id, bins = "40,-1,1") #Histogram of fake photons from fake_id array
 h_fake = h_fake.normalize()
 p_bins = h_fake.counts[6:20] #p-value in the random.choice function
 p = p_bins/numpy.sum(p_bins)
-#print(numpy.sum(p))
 
 #PDF Function
-
 fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=p)
 
 h_pdf = Hist1D(fake_photons_pdf, bins = "40,-1,1", label = "Random Function") #This is the pdf that needs to be plotted in a histogram
@@ -67,7 +71,6 @@ plt.yscale("log")
 plt.title("Fake Photon IDMVA in GJets")
 plt.xlabel("IDMVA Score")
 plt.ylabel("Events")
-#plt.legend()
 plt.show()
 #f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_GJets.pdf")
 f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_mvaid.pdf")

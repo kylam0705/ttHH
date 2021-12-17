@@ -3,11 +3,6 @@ import pandas
 import awkward
 import argparse
 
-events_awkward = awkward.from_parquet("/home/users/smay/public_html/forKyla/merged_nominal.parquet")
-events = awkward.to_pandas(events_awkward)
-
-events["MinPhoton_mvaID"] = events[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis = 1)
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
 	"--target_signal_eff",
@@ -16,6 +11,11 @@ parser.add_argument(
 	type = float,
 	help = "Determines the percentage of efficiency allowed to pass the cut")
 args = parser.parse_args()
+
+events_awkward = awkward.from_parquet("/home/users/smay/public_html/forKyla/merged_nominal.parquet")
+events = awkward.to_pandas(events_awkward)
+
+events["MinPhoton_mvaID"] = events[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis = 1)
 
 def quantiles_to_idmva_score(n_quantiles, MinPhoton_mvaID):
 	sorted_mva = numpy.sort(MinPhoton_mvaID)
