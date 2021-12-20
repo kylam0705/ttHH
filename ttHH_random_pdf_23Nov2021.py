@@ -65,12 +65,13 @@ fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fa
 
 #Making the Fake PDF Histogram
 f = plt.figure()
-h_fake = Hist1D(fake_id, bins = "40,-1,1") #Histogram of fake photons from fake_id array
+h_fake = Hist1D(fake_id, bins = "40,-1,1") #Histogram of fake photons from fake_id array. 40 bins are set so that each bin covers a 0.5 id score range
 h_fake = h_fake.normalize()
+
 #P-values:
-Beginning = (1.0-abs(min(fake_id)))*20
+Beginning = (1.0-abs(min(fake_id)))*20 #If the number of bins change then the 20's and 0.05's will also have to change
 Beginning = int(Beginning)
-print(Beginning)
+#print(Beginning)
 rounded_number = 0.05 * round(abs(args.sideband_cut) / 0.05)
 if args.sideband_cut <= 0.0: 
 	Ending = (1- rounded_number) * 20
@@ -78,9 +79,8 @@ if args.sideband_cut <= 0.0:
 if args.sideband_cut > 0.0: 
 	Ending = 20 + ((1- rounded_number)*20)
 	Ending = int(Ending)
-print(Ending)
-p_bins = h_fake.counts[Beginning:Ending]
-#p_bins = h_fake.counts[6:20] #Is there a way to change the code so that these ranges get updates with the sideband_cut? 
+#print(Ending)
+p_bins = h_fake.counts[Beginning:Ending] 
 p = p_bins/numpy.sum(p_bins) #p-value in the random.choice function
 
 #PDF Function
