@@ -71,7 +71,6 @@ h_fake = h_fake.normalize()
 #P-values:
 Beginning = (1.0-abs(min(fake_id)))*20 #If the number of bins change then the 20's and 0.05's will also have to change
 Beginning = int(Beginning)
-#print(Beginning)
 rounded_number = 0.05 * round(abs(args.sideband_cut) / 0.05)
 if args.sideband_cut <= 0.0: 
 	Ending = (1- rounded_number) * 20
@@ -79,60 +78,54 @@ if args.sideband_cut <= 0.0:
 if args.sideband_cut > 0.0: 
 	Ending = 20 + ((1- rounded_number)*20)
 	Ending = int(Ending)
-#print(Ending)
 p_bins = h_fake.counts[Beginning:Ending] 
 p = p_bins/numpy.sum(p_bins) #p-value in the random.choice function
 
 #PDF Function
-fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=p) #fake_photons is an array of integers in the wrong range. I need to convert it to floats in the [sideband_cut,1] rangei
+fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin as an array. I need to convert the events in those bins to floats in the [sideband_cut,1] range
 
 #Rescaling Function
-oMin = min(fake_photons_pdf)
-oMax = max(fake_photons_pdf)
-nMin = args.sideband_cut
-nMax = 1.0
-
-def remap(x, oMin, oMax, nMin, nMax):
+#def remap(x, oMin, oMax, nMin, nMax):
 	#range check
-	if oMin == oMax:
-		print("Warning: Zero input range")
-		return None
-	if nMin == nMax:
-		print("Warning: Zer output range")
-		return None
-
-	#Check reversed input range
-	reverse_Input = False
-	old_min = min(oMin, oMax)
-	old_max = max(oMin, oMax)
-	if not old_min == old_max: 
-		reverse_Input = True
-
+#	if oMin == oMax:
+#		print("Warning: Zero input range")
+#		return None
+#	if nMin == nMax:
+#		print("Warning: Zero output range")
+#		return None
+#	#Check reversed input range
+#	reverse_Input = False
+#	old_min = min(oMin, oMax)
+#	old_max = max(oMin, oMax)
+#	if not old_min == old_max: 
+#		reverse_Input = True
 	#Check reversed output range
-	reverse_output = False
-	new_min = min(nMin, nMax)
-	new_max = max(nMin,nMax)
-	if not new_min == new_max:
-		reverse_output = True
-
-	portion = ((x-old_min)*(new_max - new_min))/(old_max-old_min)
-	if reverse_Input: 
-		portion = ((old_max - x)*(new_max-new_min))/(old_max-old_min)
-	result = portion + new_min
-	if reverse_output: 
-		result = new_max - portion
-
-	return result
+#	reverse_output = False
+#	new_min = min(nMin, nMax)
+#	new_max = max(nMin,nMax)
+#	if not new_min == new_max:
+#		reverse_output = True
+#	portion = ((x-old_min)*(new_max - new_min))/(old_max-old_min)
+#	if reverse_Input: 
+#		portion = ((old_max - x)*(new_max-new_min))/(old_max-old_min)
+#	result = portion + new_min
+#	if reverse_output: 
+#		result = new_max - portion
+#	return result
 	#print(result)
-attempt_array = remap(fake_photons_pdf, oMin, oMax, nMin, nMax)
-#print('...')
-#print(remap(fake_photons_pdf, oMin, oMax, nMin, nMax))
+#attempt_array = remap(fake_photons_pdf, oMin, oMax, nMin, nMax)
 
 #Plotting
 h_pdf = Hist1D(fake_photons_pdf, bins = "40,-1,1") #This is the pdf that needs to be plotted in a histogram
+#for i in fake_photons_pdf: 
+#	low = h_fake.edges[i]
+	#Here I need to have some code that takes the events in fake_photons_pdf and reassign the score to be low (or the lower bin edge value)
+
+#scaling_array = numpy.random.uniform(low = low, high = high, size = sideband_cut.size)
+#attempt_array = scaling_array + #that new score from 3 lines above
+
 h_attempt = Hist1D(attempt_array, bins = "40, -1,1")
 
-#h_attempt.plot(hisstype="stepfillled", alpha = 0.8, label = "Attempt of Random Function Fixed")
 h_attempt.plot(alpha = 0.8, label = "Attempt of Random Function Fixed")
 h_pdf.plot(histtype="stepfilled", alpha = 0.8, label = "Random Function")
 h_fake.plot(histtype="stepfilled", alpha = 0.8, label = "Fake Photons from GJets")
