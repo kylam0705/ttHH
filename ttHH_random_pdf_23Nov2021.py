@@ -82,7 +82,21 @@ p_bins = h_fake.counts[Beginning:Ending]
 p = p_bins/numpy.sum(p_bins) #p-value in the random.choice function
 
 #PDF Function
-fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin as an array. I need to convert the events in those bins to floats in the [sideband_cut,1] range
+fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin as an array. I need to convert the events in those bins to floats in the [sideband_cut,1] range ie new_pdf
+fake_photons_pdf = fake_photons_pdf + Beginning #Because the array begins at 0, they might get updated (ie 0 in the array could be the 5th bin assuming the bins start at a nonzero number) 
+
+hist_idmva_low = {}
+for i in range(h_fake.nbins): 
+	hist_idmva_low[i] = round(h_fake.edges[i],2) #The keys in this dictionary are the bin numbers, the values are the lower bin edge score
+
+new_pdf = []
+new_pdf = [hist_idmva_low[key] for key in fake_photons_pdf] #This array is the lower bin edge scores of the fake_photon_pdf array of bin numbers
+new_pdf_array = numpy.array(new_pdf)
+
+low = new_pdf_array
+high = new_pdf_array + round(h_fake.bin_widths[1],2)
+size = new_pdf_array.size
+plotted_pdf = numpy.random.uniform(low = low, high= high, size = size) #This is the new array that needs to be plotted
 
 #Rescaling Function
 #def remap(x, oMin, oMax, nMin, nMax):
@@ -116,18 +130,12 @@ fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=p) #fak
 #attempt_array = remap(fake_photons_pdf, oMin, oMax, nMin, nMax)
 
 #Plotting
-h_pdf = Hist1D(fake_photons_pdf, bins = "40,-1,1") #This is the pdf that needs to be plotted in a histogram
-#for i in fake_photons_pdf: 
-#	low = h_fake.edges[i]
-	#Here I need to have some code that takes the events in fake_photons_pdf and reassign the score to be low (or the lower bin edge value)
+#h_pdf = Hist1D(fake_photons_pdf, bins = "40,-1,1") #This is the pdf that needs to be plotted in a histogram
 
-#scaling_array = numpy.random.uniform(low = low, high = high, size = sideband_cut.size)
-#attempt_array = scaling_array + #that new score from 3 lines above
+h_attempt = Hist1D(plotted_pdf, bins = "40, -1,1")
 
-h_attempt = Hist1D(attempt_array, bins = "40, -1,1")
-
-h_attempt.plot(alpha = 0.8, label = "Attempt of Random Function Fixed")
-h_pdf.plot(histtype="stepfilled", alpha = 0.8, label = "Random Function")
+h_attempt.plot(histtype = "stepfilled", alpha = 0.8, label = "Attempt of Random Function Fixed")
+#h_pdf.plot(histtype="stepfilled", alpha = 0.8, label = "Random Function")
 h_fake.plot(histtype="stepfilled", alpha = 0.8, label = "Fake Photons from GJets")
 
 plt.legend(loc='upper left', bbox_to_anchor=(0.01, 0.8, 0.2, 0.2))
