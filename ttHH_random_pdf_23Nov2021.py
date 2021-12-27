@@ -82,7 +82,7 @@ p_bins = h_fake.counts[Beginning:Ending]
 p = p_bins/numpy.sum(p_bins) #p-value in the random.choice function
 
 #PDF Function
-fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin as an array. I need to convert the events in those bins to floats in the [sideband_cut,1] range ie new_pdf
+fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin. I need to convert the identified bins to idmva scores in the [sideband_cut,1] range ie new_pdf
 fake_photons_pdf = fake_photons_pdf + Beginning #Because the array begins at 0, they might get updated (ie 0 in the array could be the 5th bin assuming the bins start at a nonzero number) 
 
 hist_idmva_low = {}
