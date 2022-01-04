@@ -68,7 +68,7 @@ f = plt.figure()
 h_fake = Hist1D(fake_id, bins = "40,-1,1") #Histogram of fake photons from fake_id array. 40 bins are set so that each bin covers a 0.5 id score range
 h_fake = h_fake.normalize()
 
-#P-values:
+#Random.Choice Inputs:
 Beginning = (1.0-abs(min(fake_id)))*20 #If the number of bins change then the 20's and 0.05's will also have to change
 Beginning = int(Beginning)
 rounded_number = 0.05 * round(abs(args.sideband_cut) / 0.05)
@@ -78,17 +78,19 @@ if args.sideband_cut <= 0.0:
 if args.sideband_cut > 0.0: 
 	Ending = 20 + ((1- rounded_number)*20)
 	Ending = int(Ending)
-p_bins = h_fake.counts[Beginning:Ending] 
+p_bins = h_fake.counts[0:Ending]
+#p_bins = h_fake.counts[Beginning:Ending] 
 p = p_bins/numpy.sum(p_bins) #p-value in the random.choice function
+#a = Ending - Beginning
 
-#PDF Function
-#sideband_bin = int(h_fake.counts[int(args.sideband_cut)])
-print(Ending)
+#Making the PDF Histogram
+#print("Beginning", Beginning)
+#print("Ending", Ending)
 
-fake_photons_pdf = numpy.random.choice(a=14, size = sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin. I need to convert the identified bins to idmva scores in the [sideband_cut,1] range ie new_pdf
+fake_photons_pdf = numpy.random.choice(a=20, size = sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin. I need to convert the identified bins to idmva scores in the [sideband_cut,1] range ie new_pdf
 fake_photons_pdf = fake_photons_pdf + Ending #Because the array begins at 0, they might get updated (ie 0 in the array could be the 5th bin assuming the bins start at a nonzero number) 
-print(fake_photons_pdf)
-print("max Fake photons", max(fake_photons_pdf))
+#print(fake_photons_pdf)
+#print("max Fake photons", max(fake_photons_pdf))
 hist_idmva_low = {}
 for i in range(h_fake.nbins): 
 	hist_idmva_low[i] = round(h_fake.edges[i],2) #The keys in this dictionary are the bin numbers, the values are the lower bin edge score
@@ -102,54 +104,38 @@ high = new_pdf_array + round(h_fake.bin_widths[1],2)
 size = new_pdf_array.size
 plotted_pdf = numpy.random.uniform(low = low, high= high, size = size) #This is the new array that needs to be plotted
 
-#Rescaling Function
-#def remap(x, oMin, oMax, nMin, nMax):
-	#range check
-#	if oMin == oMax:
-#		print("Warning: Zero input range")
-#		return None
-#	if nMin == nMax:
-#		print("Warning: Zero output range")
-#		return None
-#	#Check reversed input range
-#	reverse_Input = False
-#	old_min = min(oMin, oMax)
-#	old_max = max(oMin, oMax)
-#	if not old_min == old_max: 
-#		reverse_Input = True
-	#Check reversed output range
-#	reverse_output = False
-#	new_min = min(nMin, nMax)
-#	new_max = max(nMin,nMax)
-#	if not new_min == new_max:
-#		reverse_output = True
-#	portion = ((x-old_min)*(new_max - new_min))/(old_max-old_min)
-#	if reverse_Input: 
-#		portion = ((old_max - x)*(new_max-new_min))/(old_max-old_min)
-#	result = portion + new_min
-#	if reverse_output: 
-#		result = new_max - portion
-#	return result
-	#print(result)
-#attempt_array = remap(fake_photons_pdf, oMin, oMax, nMin, nMax)
-
-#Plotting
-#h_pdf = Hist1D(fake_photons_pdf, bins = "40,-1,1") #This is the pdf that needs to be plotted in a histogram
-
 h_attempt = Hist1D(plotted_pdf, bins = "40, -1,1")
+h_attempt = h_attempt.normalize()
 
-h_attempt.plot(histtype = "stepfilled", alpha = 0.8, label = "Attempt of Random Function Fixed")
-#h_pdf.plot(histtype="stepfilled", alpha = 0.8, label = "Random Function")
-h_fake.plot(histtype="stepfilled", alpha = 0.8, label = "Fake Photons from GJets")
+#Making the Fake PDF Subplot Histogram 
+h_subplot = Hist1D(fake_id, bins = "20,0,1", overflow=False)
+h_subplot = h_subplot.normalize()
 
-plt.legend(loc='upper left', bbox_to_anchor=(0.01, 0.8, 0.2, 0.2))
-plt.yscale("log")
-plt.title("Fake Photon IDMVA in GJets")
-plt.xlabel("IDMVA Score")
-plt.ylabel("Events")
+#Subplots: 
+fig, (ax1,ax2) = plt.subplots(2, figsize=(8,6), gridspec_kw=dict(height_ratios=[3,1]))
+
+#Plotted
+h_attempt.plot(ax=ax1,histtype = "stepfilled", alpha = 0.8, label = "Random Function", color = 'blue')
+h_fake.plot(ax=ax1,histtype="stepfilled", alpha = 0.8, label = "Fake Photons from GJets", color = 'orange')
+h_subplot.plot(ax=ax2, histtype="stepfilled", alpha = 0.8, color = 'orange')
+
+#Labels/Aesthetics
+ax1.legend(loc='upper left', bbox_to_anchor=(0.01, 0.8, 0.2, 0.2))
+ax1.set_yscale("log")
+ax1.set_xlabel("IDMVA Score")
+ax1.set_ylabel("Normalized Events")
+
+ax2.set_yscale("log")
+ax2.set_xlabel("IDMVA Score")
+ax2.set_ylabel("Normalized Events")
+
+fig.suptitle("Fake Photon IDMVA in GJets")
+plt.text(0,1, "CMS Preliminary", horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes)
+plt.text(1,1, "137 fb$^{-1}$ (13TeV)", horizontalalignment='right', verticalalignment='bottom', transform=ax1.transAxes)
+
 plt.show()
 #f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_GJets.pdf")
-f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_mvaid.pdf")
+fig.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_mvaid.pdf")
 
 
 
