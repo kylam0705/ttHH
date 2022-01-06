@@ -6,6 +6,7 @@ from yahist import Hist1D
 import argparse
 import json
 import math
+import scipy.integrate
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -74,8 +75,6 @@ def round_down(n, decimals):
 
 lower_range = float(round_down(args.sideband_cut, 1))
 n_bins = int((1-lower_range)/0.05)
-print("Lower range", lower_range)
-print("n_bins", n_bins)
 
 h_fake = Hist1D(fake_id, bins = "%d, %.1f, 1" %(n_bins, lower_range), overflow=False) #Histogram of fake photons from fake_id array. 40 bins are set so that each bin covers a 0.5 id score range
 h_fake = h_fake.normalize()
@@ -89,31 +88,25 @@ p = p_bins/numpy.sum(p_bins) #p-value in the random.choice function
 
 #Making the PDF Histogram
 fake_photons_pdf = numpy.random.choice(a=n_bins, size = sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin. I need to convert the identified bins to idmva scores in the [sideband_cut,1] range ie new_pdf
-print("fake_photons_pdf:", fake_photons_pdf)
-print("min fake_photons:", min(fake_photons_pdf))
-print("max Fake photons", max(fake_photons_pdf))
 hist_idmva_low = {}
 for i in range(h_fake.nbins): 
 	hist_idmva_low[i] = round(h_fake.edges[i],2) #The keys in this dictionary are the bin numbers, the values are the lower bin edge score
-print("hist_idmva_low", hist_idmva_low)
 
 new_pdf = []
 new_pdf = [hist_idmva_low[key] for key in fake_photons_pdf] #This array is the lower bin edge scores of the fake_photon_pdf array of bin numbers
 new_pdf_array = numpy.array(new_pdf)
-print("new_pdf_array", new_pdf_array)
 
 low = new_pdf_array
 high = new_pdf_array + round(h_fake.bin_widths[1],2)
 size = new_pdf_array.size
 plotted_pdf = numpy.random.uniform(low = low, high= high, size = new_pdf_array.size) #This is the new array that needs to be plotted 
-print("plotted_pdf", plotted_pdf)
 
 h_attempt = Hist1D(plotted_pdf, bins = "%d,%.1f,1" %(n_bins, lower_range), overflow=False)
 h_attempt = h_attempt.normalize()
 
 #Plotted
-h_attempt.plot(histtype = "stepfilled", alpha = 0.8, label = "Random Function", color = 'blue')
-h_fake.plot(histtype="stepfilled", alpha = 0.8, label = "Fake Photons from GJets", color = 'orange')
+h_attempt.plot(label = "Random Function", color = 'blue')
+h_fake.plot(label = "Fake Photons from GJets", color = 'orange')
 
 #Labels/Aesthetics
 plt.legend(loc='upper left', bbox_to_anchor=(0.01, 0.8, 0.2, 0.2))
@@ -128,5 +121,21 @@ plt.title("Fake Photon IDMVA in GJets")
 plt.show()
 f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_mvaid.pdf")
 
+##Reweighing Events
+upper_limit_num = round(max(fake_id),3)
+lower_limit_num = round(args.sideband_cut, 2)
+numerator = scipy.integrate.quad(h_fake, lower_limit_num, upper_limit_num)
 
+upper_limit_denom = round(args.sideband_cut, 2)
+lower_limit_denom = round(min(fake_id),3)
+#denominator = scipy.integrate.quad(h_fake, lower_limit_denom, upper_limit_denom)
+
+#omega = numerator / denominator 
+
+#print("omega", omega)
+print("upper_limit_num", upper_limit_num)
+print("lower_limit_num", lower_limit_num)
+print("lower_limit_denom", lower_limit_denom)
+#print("numerator", numerator)
+#print("denominator", denominator)
 
