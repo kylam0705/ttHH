@@ -135,25 +135,35 @@ f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_mvaid.p
 random_choice_function = numpy.random.choice(a=40, size = data_in_sideband_cut.size, p = h_weight.counts)
 rescaled_events = [hist_idmva_low[key] for key in random_choice_function]
 rescaled_events_array = numpy.array(rescaled_events)
+low_new = rescaled_events_array
+high_new = rescaled_events_array + 0.05
+size_new = rescaled_events_array.size
+random_pdf = numpy.random.uniform(low = low_new, high = high_new, size = size_new)
 
-upper_limit_num = round(max(plotted_pdf),3)
+upper_limit_num = max(random_pdf)
 lower_limit_num = round(args.sideband_cut, 2)
 
 upper_limit_denom = round(args.sideband_cut, 2)
-lower_limit_denom = round(min(plotted_pdf),3)
+lower_limit_denom = min(random_pdf)
 print("lower limit: ", lower_limit_denom)
 
-omega = []
+omega_list = []
 
-for event in plotted_pdf: 
+for event in random_pdf: 
 	x = lambda event : event
 	numerator, error_num = scipy.integrate.quad(x, lower_limit_num, upper_limit_num)
 	denominator, error_denom = scipy.integrate.quad(x, lower_limit_denom, upper_limit_denom)
 	omega = numerator / denominator
+	omega_list.append(omega)
 
-print("omega", omega)
+print(numerator, "numerator")
+print("denominator", denominator)
+#print("omega_list", omega_list)
 
 
 
+
+new_weight = fake_id["weight_central"]*omega_list
+print("new_weight", new_weight)
 
 
