@@ -36,7 +36,7 @@ json_file.close()
 data = events_json["sample_id_map"]["Data"]
 events_data = events[events["process_id"] == data]
 events_data["MinPhoton_mvaID"] = events_data[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis=1)
-sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideband_cut]
+data_in_sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideband_cut]
 #print(sideband_cut.size)
 
 #Gamma + Jets Process:
@@ -58,6 +58,7 @@ fake_sublead = events_GJets[events_GJets["SubleadPhoton_genPartFlav"] == 0]
 fake_sublead_id = fake_sublead["SubleadPhoton_mvaID"]
 #Fake ID
 fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fake photons to be inserted into the histogram h_fake
+print("min_fake_id", min(fake_id))
 
 #More Columns in the Dataframe
 #min_value_series = events['LeadPhoton_mvaID','SubleadPhoton_mvaID'].min(axis=1)
@@ -73,11 +74,15 @@ def round_down(n, decimals):
 	rounded_number = math.floor(n * multiplier) / multiplier
 	return rounded_number
 
+
 lower_range = float(round_down(args.sideband_cut, 1))
 n_bins = int((1-lower_range)/0.05)
 
 h_fake = Hist1D(fake_id, bins = "%d, %.1f, 1" %(n_bins, lower_range), overflow=False) #Histogram of fake photons from fake_id array. 40 bins are set so that each bin covers a 0.5 id score range
 h_fake = h_fake.normalize()
+
+h_weight = Hist1D(fake_id, bins = "40,-1,1")
+h_weight = h_weight.normalize()
 
 #Random.Choice Inputs:
 Last_Bin = n_bins
@@ -87,19 +92,23 @@ p_bins = h_fake.counts[First_Bin:Last_Bin]
 p = p_bins/numpy.sum(p_bins) #p-value in the random.choice function
 
 #Making the PDF Histogram
-fake_photons_pdf = numpy.random.choice(a=n_bins, size = sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin. I need to convert the identified bins to idmva scores in the [sideband_cut,1] range ie new_pdf
+fake_photons_pdf = numpy.random.choice(a=n_bins, size = data_in_sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin. I need to convert the identified bins to idmva scores in the [sideband_cut,1] range ie new_pdf
+print("min fake_photons_pdf", min(fake_photons_pdf))
+
 hist_idmva_low = {}
-for i in range(h_fake.nbins): 
-	hist_idmva_low[i] = round(h_fake.edges[i],2) #The keys in this dictionary are the bin numbers, the values are the lower bin edge score
+for i in range(h_weight.nbins): 
+	hist_idmva_low[i] = round(h_weight.edges[i],2) #The keys in this dictionary are the bin numbers, the values are the lower bin edge score
 
 new_pdf = []
 new_pdf = [hist_idmva_low[key] for key in fake_photons_pdf] #This array is the lower bin edge scores of the fake_photon_pdf array of bin numbers
 new_pdf_array = numpy.array(new_pdf)
+print("Min pdf array", min(new_pdf_array))
 
 low = new_pdf_array
 high = new_pdf_array + round(h_fake.bin_widths[1],2)
 size = new_pdf_array.size
 plotted_pdf = numpy.random.uniform(low = low, high= high, size = new_pdf_array.size) #This is the new array that needs to be plotted 
+print("min plotted_pdf: ", min(plotted_pdf))
 
 h_attempt = Hist1D(plotted_pdf, bins = "%d,%.1f,1" %(n_bins, lower_range), overflow=False)
 h_attempt = h_attempt.normalize()
@@ -121,21 +130,30 @@ plt.title("Fake Photon IDMVA in GJets")
 plt.show()
 f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_mvaid.pdf")
 
-##Reweighing Events
-upper_limit_num = round(max(fake_id),3)
+#Reweighing Events
+##Random Choice
+random_choice_function = numpy.random.choice(a=40, size = data_in_sideband_cut.size, p = h_weight.counts)
+rescaled_events = [hist_idmva_low[key] for key in random_choice_function]
+rescaled_events_array = numpy.array(rescaled_events)
+
+upper_limit_num = round(max(plotted_pdf),3)
 lower_limit_num = round(args.sideband_cut, 2)
-numerator = scipy.integrate.quad(h_fake, lower_limit_num, upper_limit_num)
 
 upper_limit_denom = round(args.sideband_cut, 2)
-lower_limit_denom = round(min(fake_id),3)
-#denominator = scipy.integrate.quad(h_fake, lower_limit_denom, upper_limit_denom)
+lower_limit_denom = round(min(plotted_pdf),3)
+print("lower limit: ", lower_limit_denom)
 
-#omega = numerator / denominator 
+omega = []
 
-#print("omega", omega)
-print("upper_limit_num", upper_limit_num)
-print("lower_limit_num", lower_limit_num)
-print("lower_limit_denom", lower_limit_denom)
-#print("numerator", numerator)
-#print("denominator", denominator)
+for event in plotted_pdf: 
+	x = lambda event : event
+	numerator, error_num = scipy.integrate.quad(x, lower_limit_num, upper_limit_num)
+	denominator, error_denom = scipy.integrate.quad(x, lower_limit_denom, upper_limit_denom)
+	omega = numerator / denominator
+
+print("omega", omega)
+
+
+
+
 
