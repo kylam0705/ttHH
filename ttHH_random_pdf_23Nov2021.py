@@ -7,6 +7,7 @@ import argparse
 import json
 import math
 import scipy.integrate
+from numpy import nan
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -58,7 +59,7 @@ fake_sublead = events_GJets[events_GJets["SubleadPhoton_genPartFlav"] == 0]
 fake_sublead_id = fake_sublead["SubleadPhoton_mvaID"]
 #Fake ID
 fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fake photons to be inserted into the histogram h_fake
-print("min_fake_id", min(fake_id))
+#print("min_fake_id", min(fake_id))
 
 #More Columns in the Dataframe
 #min_value_series = events['LeadPhoton_mvaID','SubleadPhoton_mvaID'].min(axis=1)
@@ -93,7 +94,7 @@ p = p_bins/numpy.sum(p_bins) #p-value in the random.choice function
 
 #Making the PDF Histogram
 fake_photons_pdf = numpy.random.choice(a=n_bins, size = data_in_sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin. I need to convert the identified bins to idmva scores in the [sideband_cut,1] range ie new_pdf
-print("min fake_photons_pdf", min(fake_photons_pdf))
+#print("min fake_photons_pdf", min(fake_photons_pdf))
 
 hist_idmva_low = {}
 for i in range(h_weight.nbins): 
@@ -102,13 +103,13 @@ for i in range(h_weight.nbins):
 new_pdf = []
 new_pdf = [hist_idmva_low[key] for key in fake_photons_pdf] #This array is the lower bin edge scores of the fake_photon_pdf array of bin numbers
 new_pdf_array = numpy.array(new_pdf)
-print("Min pdf array", min(new_pdf_array))
+#print("Min pdf array", min(new_pdf_array))
 
 low = new_pdf_array
 high = new_pdf_array + round(h_fake.bin_widths[1],2)
 size = new_pdf_array.size
 plotted_pdf = numpy.random.uniform(low = low, high= high, size = new_pdf_array.size) #This is the new array that needs to be plotted 
-print("min plotted_pdf: ", min(plotted_pdf))
+#print("min plotted_pdf: ", min(plotted_pdf))
 
 h_attempt = Hist1D(plotted_pdf, bins = "%d,%.1f,1" %(n_bins, lower_range), overflow=False)
 h_attempt = h_attempt.normalize()
@@ -139,28 +140,36 @@ low_new = rescaled_events_array
 high_new = rescaled_events_array + 0.05
 size_new = rescaled_events_array.size
 random_pdf = numpy.random.uniform(low = low_new, high = high_new, size = size_new)
+random_pdf = random_pdf[numpy.logical_not(numpy.isnan(random_pdf))]
+
+sideband_cut_bound = round(args.sideband_cut, 2)
 
 upper_limit_num = max(random_pdf)
-lower_limit_num = round(args.sideband_cut, 2)
-
-upper_limit_denom = round(args.sideband_cut, 2)
 lower_limit_denom = min(random_pdf)
-print("lower limit: ", lower_limit_denom)
 
 omega_list = []
 
-for event in random_pdf: 
-#	function = lambda:event
-	def function(self): 
-		return event
-	numerator, error_num = scipy.integrate.quad(func = function, a = lower_limit_num, b = upper_limit_num)
-	denominator, error_denom = scipy.integrate.quad(func = function, a = lower_limit_denom, b = upper_limit_denom)
-	omega = numerator / denominator
-	omega_list.append(omega)
+#num_array = []
+#denom_array = []
+num_array = [event for event in random_pdf if event >= sideband_cut_bound]
+denom_array = [event for event in random_pdf if event <= sideband_cut_bound]
 
-#print(numerator, "numerator")
-#print("denominator", denominator)
-#print("omega_list", omega_list)
+for event in random_pdf: 
+#	if event >= sideband_cut_bound: 
+#		num_array = num_array.append(event)
+#	if event <= sideband_cut_bound: 
+#		denom_array = denom_array.append(event)
+	numerator = numpy.sum(num_array)
+	denominator = numpy.sum(denom_array)
+#	print("Denominator", denominator)
+#	print("Numerator", numerator)
+	omega = numerator / denominator
+	omega_list = omega_list.append(omega)
+
+print("omega", omega)
+print(numerator, "numerator")
+print("denominator", denominator)
+print("omega_list", omega_list)
 
 
 
