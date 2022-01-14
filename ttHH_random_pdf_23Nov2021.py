@@ -150,20 +150,20 @@ print("lower limit: ", lower_limit_denom)
 omega_list = []
 
 for event in random_pdf: 
-	x = lambda event : event
-	numerator, error_num = scipy.integrate.quad(x, lower_limit_num, upper_limit_num)
-	denominator, error_denom = scipy.integrate.quad(x, lower_limit_denom, upper_limit_denom)
+#	function = lambda:event
+	def function(self): 
+		return event
+	numerator, error_num = scipy.integrate.quad(func = function, a = lower_limit_num, b = upper_limit_num)
+	denominator, error_denom = scipy.integrate.quad(func = function, a = lower_limit_denom, b = upper_limit_denom)
 	omega = numerator / denominator
 	omega_list.append(omega)
 
-print(numerator, "numerator")
-print("denominator", denominator)
+#print(numerator, "numerator")
+#print("denominator", denominator)
 #print("omega_list", omega_list)
 
 
 
 
-new_weight = fake_id["weight_central"]*omega_list
-print("new_weight", new_weight)
 
 
