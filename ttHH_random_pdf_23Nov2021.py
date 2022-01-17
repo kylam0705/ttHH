@@ -161,7 +161,7 @@ print("denominator", denominator)
 print("omega", omega)
 
 #original_weight = events[events["weight_central_initial"]]
-original_weight = fake_id_events["weight_central_initial"]
+original_weight = fake_id_events["weight_central"]
 print("original_weight", original_weight)
 new_weight = original_weight * omega
 print("new_weight", new_weight)
