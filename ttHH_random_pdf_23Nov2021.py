@@ -60,6 +60,7 @@ fake_sublead_id = fake_sublead["SubleadPhoton_mvaID"]
 #Fake ID
 fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fake photons to be inserted into the histogram h_fake
 #print("min_fake_id", min(fake_id))
+fake_id_events = pandas.concat([fake_lead, fake_sublead])
 
 #More Columns in the Dataframe
 #min_value_series = events['LeadPhoton_mvaID','SubleadPhoton_mvaID'].min(axis=1)
@@ -147,32 +148,23 @@ sideband_cut_bound = round(args.sideband_cut, 2)
 upper_limit_num = max(random_pdf)
 lower_limit_denom = min(random_pdf)
 
-omega_list = []
-
-#num_array = []
-#denom_array = []
 num_array = [event for event in random_pdf if event >= sideband_cut_bound]
 denom_array = [event for event in random_pdf if event <= sideband_cut_bound]
+numerator = round(numpy.sum(num_array), 4)
+denominator = abs(round(numpy.sum(denom_array), 4))
+omega = numerator/denominator
 
-for event in random_pdf: 
-#	if event >= sideband_cut_bound: 
-#		num_array = num_array.append(event)
-#	if event <= sideband_cut_bound: 
-#		denom_array = denom_array.append(event)
-	numerator = numpy.sum(num_array)
-	denominator = numpy.sum(denom_array)
-#	print("Denominator", denominator)
-#	print("Numerator", numerator)
-	omega = numerator / denominator
-	omega_list = omega_list.append(omega)
-
-print("omega", omega)
-print(numerator, "numerator")
+#print("num_array", num_array)
+#print("denom_array", denom_array)
+print("numerator", numerator)
 print("denominator", denominator)
-print("omega_list", omega_list)
+print("omega", omega)
 
-
-
+#original_weight = events[events["weight_central_initial"]]
+original_weight = fake_id_events["weight_central_initial"]
+print("original_weight", original_weight)
+new_weight = original_weight * omega
+print("new_weight", new_weight)
 
 
 
