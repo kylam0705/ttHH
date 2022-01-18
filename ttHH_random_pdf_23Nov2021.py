@@ -136,26 +136,11 @@ f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_mvaid.p
 random_choice_function = numpy.random.choice(a=40, size = data_in_sideband_cut.size, p = h_weight.counts)
 rescaled_events = [hist_idmva_low[key] for key in random_choice_function]
 f_rescaled_events_array = numpy.array(rescaled_events)
-print("first rescaled_events_array", f_rescaled_events_array)
-low_new = f_rescaled_events_array
-high_new = f_rescaled_events_array + 0.05
 size_new = f_rescaled_events_array.size
-print("low_new", low_new)
-print("high_new", high_new)
-print(size_new, "size_new")
-s_rescaled_events_array = f_rescaled_events_array + numpy.random.uniform(low = low_new, high = high_new, size = size_new)
-print("second rescaled_events_array", s_rescaled_events_array)
-random_pdf = numpy.random.uniform(low = low_new, high = high_new, size = size_new)
-print("random_pdf", random_pdf)
-#random_pdf = random_pdf[numpy.logical_not(numpy.isnan(random_pdf))]
+s_rescaled_events_array = f_rescaled_events_array + numpy.random.uniform(low = 0, high = round(h_weight.bin_widths[1],3), size = size_new)
+#print("second rescaled_events_array", s_rescaled_events_array)
 
 sideband_cut_bound = round(args.sideband_cut, 2)
-
-#upper_limit_num = max(random_pdf)
-#lower_limit_denom = min(random_pdf)
-
-#num_array = [event for event in random_pdf if event >= sideband_cut_bound]
-#denom_array = [event for event in random_pdf if event <= sideband_cut_bound]
 
 num_array = [event for event in s_rescaled_events_array if event >= sideband_cut_bound]
 denom_array = [event for event in s_rescaled_events_array if event <= sideband_cut_bound]
@@ -180,12 +165,9 @@ h_first = Hist1D(f_rescaled_events_array, bins = "100,-1,1")
 h_first = h_first.normalize()
 h_second = Hist1D(s_rescaled_events_array, bins = "100,-1,1")
 h_second = h_second.normalize()
-h_third = Hist1D(random_pdf, bins = "100,-1,1")
-h_third = h_third.normalize()
 
 h_first.plot(label = "Lower Bin Score", color = 'blue', histtype = 'stepfilled', alpha = 0.8)
 h_second.plot(label = "Bin Score + random.uniform", color = 'orange', histtype = 'stepfilled', alpha = 0.8)
-h_third.plot(label = "random.uniform", color = 'red', histtype = 'stepfilled', alpha = 0.8)
 
 plt.legend(loc='upper left', bbox_to_anchor=(0.01, 0.8, 0.2, 0.2))
 plt.yscale("log")
