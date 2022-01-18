@@ -60,7 +60,6 @@ fake_sublead_id = fake_sublead["SubleadPhoton_mvaID"]
 #Fake ID
 fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fake photons to be inserted into the histogram h_fake
 #print("min_fake_id", min(fake_id))
-fake_id_events = pandas.concat([fake_lead, fake_sublead])
 
 #More Columns in the Dataframe
 #min_value_series = events['LeadPhoton_mvaID','SubleadPhoton_mvaID'].min(axis=1)
@@ -136,35 +135,65 @@ f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_mvaid.p
 ##Random Choice
 random_choice_function = numpy.random.choice(a=40, size = data_in_sideband_cut.size, p = h_weight.counts)
 rescaled_events = [hist_idmva_low[key] for key in random_choice_function]
-rescaled_events_array = numpy.array(rescaled_events)
-low_new = rescaled_events_array
-high_new = rescaled_events_array + 0.05
-size_new = rescaled_events_array.size
+f_rescaled_events_array = numpy.array(rescaled_events)
+print("first rescaled_events_array", f_rescaled_events_array)
+low_new = f_rescaled_events_array
+high_new = f_rescaled_events_array + 0.05
+size_new = f_rescaled_events_array.size
+print("low_new", low_new)
+print("high_new", high_new)
+print(size_new, "size_new")
+s_rescaled_events_array = f_rescaled_events_array + numpy.random.uniform(low = low_new, high = high_new, size = size_new)
+print("second rescaled_events_array", s_rescaled_events_array)
 random_pdf = numpy.random.uniform(low = low_new, high = high_new, size = size_new)
-random_pdf = random_pdf[numpy.logical_not(numpy.isnan(random_pdf))]
+print("random_pdf", random_pdf)
+#random_pdf = random_pdf[numpy.logical_not(numpy.isnan(random_pdf))]
 
 sideband_cut_bound = round(args.sideband_cut, 2)
 
-upper_limit_num = max(random_pdf)
-lower_limit_denom = min(random_pdf)
+#upper_limit_num = max(random_pdf)
+#lower_limit_denom = min(random_pdf)
 
-num_array = [event for event in random_pdf if event >= sideband_cut_bound]
-denom_array = [event for event in random_pdf if event <= sideband_cut_bound]
-numerator = round(numpy.sum(num_array), 4)
-denominator = abs(round(numpy.sum(denom_array), 4))
+#num_array = [event for event in random_pdf if event >= sideband_cut_bound]
+#denom_array = [event for event in random_pdf if event <= sideband_cut_bound]
+
+num_array = [event for event in s_rescaled_events_array if event >= sideband_cut_bound]
+denom_array = [event for event in s_rescaled_events_array if event <= sideband_cut_bound]
+numerator = numpy.sum(num_array)
+denominator = abs(numpy.sum(denom_array))
 omega = numerator/denominator
 
 #print("num_array", num_array)
 #print("denom_array", denom_array)
-print("numerator", numerator)
-print("denominator", denominator)
-print("omega", omega)
+#print("numerator", numerator)
+#print("denominator", denominator)
+#print("omega", omega)
 
-#original_weight = events[events["weight_central_initial"]]
-original_weight = fake_id_events["weight_central"]
-print("original_weight", original_weight)
+original_weight = data_in_sideband_cut["weight_central"]
 new_weight = original_weight * omega
-print("new_weight", new_weight)
+#print("original_weight", original_weight)
+#print("new_weight", new_weight)
+
+#Histograms
+fig = plt.figure()
+h_first = Hist1D(f_rescaled_events_array, bins = "100,-1,1")
+h_first = h_first.normalize()
+h_second = Hist1D(s_rescaled_events_array, bins = "100,-1,1")
+h_second = h_second.normalize()
+h_third = Hist1D(random_pdf, bins = "100,-1,1")
+h_third = h_third.normalize()
+
+h_first.plot(label = "Lower Bin Score", color = 'blue', histtype = 'stepfilled', alpha = 0.8)
+h_second.plot(label = "Bin Score + random.uniform", color = 'orange', histtype = 'stepfilled', alpha = 0.8)
+h_third.plot(label = "random.uniform", color = 'red', histtype = 'stepfilled', alpha = 0.8)
+
+plt.legend(loc='upper left', bbox_to_anchor=(0.01, 0.8, 0.2, 0.2))
+plt.yscale("log")
+plt.xlabel("IDMVA Score")
+plt.ylabel("Normalized Events")
+
+plt.show()
+fig.savefig("/home/users/kmartine/public_html/plots/Fall_2021/rescaled_events.pdf")
 
 
 
