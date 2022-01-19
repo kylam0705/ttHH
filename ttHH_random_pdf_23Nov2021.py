@@ -140,24 +140,19 @@ size_new = f_rescaled_events_array.size
 s_rescaled_events_array = f_rescaled_events_array + numpy.random.uniform(low = 0, high = round(h_weight.bin_widths[1],3), size = size_new)
 #print("second rescaled_events_array", s_rescaled_events_array)
 
+#Bounds of Integral
 sideband_cut_bound = round(args.sideband_cut, 2)
 
+#Integrals in Fraction
 num_array = [event for event in s_rescaled_events_array if event >= sideband_cut_bound]
 denom_array = [event for event in s_rescaled_events_array if event <= sideband_cut_bound]
 numerator = numpy.sum(num_array)
 denominator = abs(numpy.sum(denom_array))
 omega = numerator/denominator
 
-#print("num_array", num_array)
-#print("denom_array", denom_array)
-#print("numerator", numerator)
-#print("denominator", denominator)
-#print("omega", omega)
-
+#New Weights
 original_weight = data_in_sideband_cut["weight_central"]
 new_weight = original_weight * omega
-#print("original_weight", original_weight)
-#print("new_weight", new_weight)
 
 #Histograms
 fig = plt.figure()
@@ -176,6 +171,16 @@ plt.ylabel("Normalized Events")
 
 plt.show()
 fig.savefig("/home/users/kmartine/public_html/plots/Fall_2021/rescaled_events.pdf")
+
+#Making New Parquet File
+#Correllating Events and ID's 
+#Concat to new parquet file
+
+
+
+
+
+
 
 
 
