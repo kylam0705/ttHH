@@ -60,6 +60,7 @@ fake_sublead_id = fake_sublead["SubleadPhoton_mvaID"]
 #Fake ID
 fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fake photons to be inserted into the histogram h_fake
 #print("min_fake_id", min(fake_id))
+#print("max_fake_id", max(fake_id))
 
 #More Columns in the Dataframe
 #min_value_series = events['LeadPhoton_mvaID','SubleadPhoton_mvaID'].min(axis=1)
@@ -118,6 +119,9 @@ h_attempt = h_attempt.normalize()
 h_attempt.plot(label = "Random Function", color = 'blue')
 h_fake.plot(label = "Fake Photons from GJets", color = 'orange')
 
+print("bin counts", h_attempt.counts)
+print("bin edges", h_attempt.edges)
+
 #Labels/Aesthetics
 plt.legend(loc='upper left', bbox_to_anchor=(0.01, 0.8, 0.2, 0.2))
 plt.yscale("log")
@@ -137,22 +141,8 @@ random_choice_function = numpy.random.choice(a=40, size = data_in_sideband_cut.s
 rescaled_events = [hist_idmva_low[key] for key in random_choice_function]
 f_rescaled_events_array = numpy.array(rescaled_events)
 size_new = f_rescaled_events_array.size
-s_rescaled_events_array = f_rescaled_events_array + numpy.random.uniform(low = 0, high = round(h_weight.bin_widths[1],3), size = size_new)
+s_rescaled_events_array = f_rescaled_events_array + numpy.random.uniform(low = 0, high = round(h_weight.bin_widths[1],3), size = size_new) #This array allocates a score to an event based on the bin value
 #print("second rescaled_events_array", s_rescaled_events_array)
-
-#Bounds of Integral
-sideband_cut_bound = round(args.sideband_cut, 2)
-
-#Integrals in Fraction
-num_array = [event for event in s_rescaled_events_array if event >= sideband_cut_bound]
-denom_array = [event for event in s_rescaled_events_array if event <= sideband_cut_bound]
-numerator = numpy.sum(num_array)
-denominator = abs(numpy.sum(denom_array))
-omega = numerator/denominator
-
-#New Weights
-original_weight = data_in_sideband_cut["weight_central"]
-new_weight = original_weight * omega
 
 #Histograms
 fig = plt.figure()
@@ -172,8 +162,49 @@ plt.ylabel("Normalized Events")
 plt.show()
 fig.savefig("/home/users/kmartine/public_html/plots/Fall_2021/rescaled_events.pdf")
 
+hist_idmva_low_scores = {}
+for i in range(h_second.nbins): 
+	hist_idmva_low_scores[i] = round(h_second.edges[i],2) #The keys in this dictionary are the bin numbers, the values are the lower bin edge score
+
+#Bounds of Integral
+sideband_cut_bound = (0.5*(args.sideband_cut+1))*h_second.nbins
+sideband_cut_bound = int(sideband_cut_bound)
+print("sideband cut bound", sideband_cut_bound)
+print("n bins", h_second.nbins)
+
+#Integrals in Fraction
+omega_array = []
+for event in s_rescaled_events_array: 
+	#In the histogram, the probabilities gets plotted
+	#The numerator is the sum of the probabilities between the sideband cut and the max id score. So I need to take probabilities of the bins and add them up 
+	for value in hist_idmva_low_scores.items(): 
+#		num_max_bound = hist_idmva_low_scores[max(event)]
+		num_max_bound = max(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
+#		denom_min_bound = hist_idmva_low_scores[min(event)]
+		denom_min_bound = min(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
+		print("num_max_bound", num_max_bound)
+		print("denom_min_bound", denom_min_bound)
+		numerator = numpy.sum(h_second.counts[sideband_cut_bound:num_max_bound])
+		print(numerator, "numerator")
+		denominator = numpy.sum(h_second.counts[denom_min_bound:sideband_cut_bound])
+		print("denominator", denominator)
+	#numerator = integral of fake PDF from sideband cut to max gamma ID
+	#denominator = integral of fake PDF from min value to sideband cut
+		omega = numerator/denominator
+		print("omega", omega)
+		omega_array = omega_array.append(omega)
+print("max bound", num_max_bound)
+print("min bound", denom_min_bound)
+
+#New Weights
+original_weight = data_in_sideband_cut["weight_central"]
+new_weight = original_weight * omega
+
 #Making New Parquet File
 #Correllating Events and ID's 
+#data_in_sideband_cut["Photon_mvaid"] = s_rescaled_events_array
+#date_in_sideband_cut["New_weight"] = new_weight
+
 #Concat to new parquet file
 
 
