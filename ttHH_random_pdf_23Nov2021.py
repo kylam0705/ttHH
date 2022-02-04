@@ -83,6 +83,9 @@ n_bins = int((1-lower_range)/0.05)
 h_fake = Hist1D(fake_id, bins = "%d, %.1f, 1" %(n_bins, lower_range), overflow=False) #Histogram of fake photons from fake_id array. 40 bins are set so that each bin covers a 0.5 id score range
 h_fake = h_fake.normalize()
 
+h_fake_all = Hist1D(fake_id, bins = "100,-1,1") #This one is used later for taking the integrals
+h_fake_all = h_fake_all.normalize()
+
 h_weight = Hist1D(fake_id, bins = "40,-1,1")
 h_weight = h_weight.normalize()
 
@@ -119,7 +122,7 @@ h_attempt = h_attempt.normalize()
 h_attempt.plot(label = "Random Function", color = 'blue')
 h_fake.plot(label = "Fake Photons from GJets", color = 'orange')
 
-print("bin counts", h_attempt.counts)
+print("h_attempt bin counts", h_attempt.counts)
 print("bin edges", h_attempt.edges)
 
 #Labels/Aesthetics
@@ -151,6 +154,8 @@ h_first = h_first.normalize()
 h_second = Hist1D(s_rescaled_events_array, bins = "100,-1,1")
 h_second = h_second.normalize()
 
+print("h_second bin counts", h_second.counts)
+
 h_first.plot(label = "Lower Bin Score", color = 'blue', histtype = 'stepfilled', alpha = 0.8)
 h_second.plot(label = "Bin Score + random.uniform", color = 'orange', histtype = 'stepfilled', alpha = 0.8)
 
@@ -172,33 +177,41 @@ sideband_cut_bound = int(sideband_cut_bound)
 print("sideband cut bound", sideband_cut_bound)
 print("n bins", h_second.nbins)
 
-#Integrals in Fraction
 omega_array = []
-for event in s_rescaled_events_array: 
-	#In the histogram, the probabilities gets plotted
-	#The numerator is the sum of the probabilities between the sideband cut and the max id score. So I need to take probabilities of the bins and add them up 
-	for value in hist_idmva_low_scores.items(): 
-#		num_max_bound = hist_idmva_low_scores[max(event)]
+for event in fake_id: 
+	for key, values in hist_idmva_low_scores.items:
 		num_max_bound = max(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
-#		denom_min_bound = hist_idmva_low_scores[min(event)]
 		denom_min_bound = min(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
-		print("num_max_bound", num_max_bound)
-		print("denom_min_bound", denom_min_bound)
-		numerator = numpy.sum(h_second.counts[sideband_cut_bound:num_max_bound])
-		print(numerator, "numerator")
-		denominator = numpy.sum(h_second.counts[denom_min_bound:sideband_cut_bound])
-		print("denominator", denominator)
-	#numerator = integral of fake PDF from sideband cut to max gamma ID
-	#denominator = integral of fake PDF from min value to sideband cut
-		omega = numerator/denominator
-		print("omega", omega)
-		omega_array = omega_array.append(omega)
-print("max bound", num_max_bound)
-print("min bound", denom_min_bound)
+	numerator = h.counts[sideband_cut_bound : num_max_bound]
+	denominator = h.counts[denom_min_bound : sideband_cut_bound]
+	omega = numerator / denominator
+	omega_array = omega_array.append(omega)
+
+#Integrals in Fraction
+##omega_array = []
+##for event in s_rescaled_events_array: 
+##	#In the histogram, the probabilities gets plotted
+##	#The numerator is the sum of the probabilities between the sideband cut and the max id score. So I need to take probabilities of the bins and add them up 
+##	for value in hist_idmva_low_scores.items(): 
+##		num_max_bound = max(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
+##		denom_min_bound = min(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
+##		print("num_max_bound", num_max_bound)
+##		print("denom_min_bound", denom_min_bound)
+##		numerator = numpy.sum(h_probability.counts[sideband_cut_bound:num_max_bound])
+##		print(numerator, "numerator")
+##		denominator = numpy.sum(h_probability.counts[denom_min_bound:sideband_cut_bound])
+##		print("denominator", denominator)
+##	#numerator = integral of fake PDF from sideband cut to max gamma ID
+##	#denominator = integral of fake PDF from min value to sideband cut
+##		omega = numerator/denominator
+##		print("omega", omega)
+##		omega_array = omega_array.append(omega)
+##print("max bound", num_max_bound)
+##print("min bound", denom_min_bound)
 
 #New Weights
 original_weight = data_in_sideband_cut["weight_central"]
-new_weight = original_weight * omega
+new_weight = original_weight * omega_array
 
 #Making New Parquet File
 #Correllating Events and ID's 
