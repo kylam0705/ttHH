@@ -168,7 +168,7 @@ plt.show()
 fig.savefig("/home/users/kmartine/public_html/plots/Fall_2021/rescaled_events.pdf")
 
 hist_idmva_low_scores = {}
-for i in range(h_second.nbins): 
+for i in range(h_fake_all.nbins): 
 	hist_idmva_low_scores[i] = round(h_second.edges[i],2) #The keys in this dictionary are the bin numbers, the values are the lower bin edge score
 
 #Bounds of Integral
@@ -179,11 +179,11 @@ print("n bins", h_second.nbins)
 
 omega_array = []
 for event in fake_id: 
-	for key, values in hist_idmva_low_scores.items:
+	for key, values in hist_idmva_low_scores.items():
 		num_max_bound = max(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
 		denom_min_bound = min(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
-	numerator = h.counts[sideband_cut_bound : num_max_bound]
-	denominator = h.counts[denom_min_bound : sideband_cut_bound]
+	numerator = h_fake_all.counts[sideband_cut_bound : num_max_bound]
+	denominator = h_fake_all.counts[denom_min_bound : sideband_cut_bound]
 	omega = numerator / denominator
 	omega_array = omega_array.append(omega)
 
