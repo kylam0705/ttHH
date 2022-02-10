@@ -37,6 +37,7 @@ json_file.close()
 data = events_json["sample_id_map"]["Data"]
 events_data = events[events["process_id"] == data]
 events_data["MinPhoton_mvaID"] = events_data[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis=1)
+events_data["MaxPhoton_mvaID"] = events_data[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].max(axis=1)
 data_in_sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideband_cut]
 #print(sideband_cut.size)
 
@@ -59,11 +60,16 @@ fake_sublead = events_GJets[events_GJets["SubleadPhoton_genPartFlav"] == 0]
 fake_sublead_id = fake_sublead["SubleadPhoton_mvaID"]
 #Fake ID
 fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fake photons to be inserted into the histogram h_fake
+
+#Min & Max:
+events_GJets["MinFakePhoton_mvaID"] = events_data[['fake_lead_id','fake_sublead_id']].min(axis=1)
+events_data["MaxFakePhoton_mvaID"] = events_data[['fake_lead_id','fake_sublead_id']].max(axis=1)
+
 #print("min_fake_id", min(fake_id))
 #print("max_fake_id", max(fake_id))
 
 #More Columns in the Dataframe
-#min_value_series = events['LeadPhoton_mvaID','SubleadPhoton_mvaID'].min(axis=1)
+#min_value_series = events[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis=1)
 #events["MinPhoton_mvaID"] = min_value_series
 #events_photon_sideband_cut = events[events["MinPhoton_mvaID"] > -0.67]
 #events_photon_preselection_cut = events[events["max_pho_idmva"] > -0.67]
@@ -85,6 +91,7 @@ h_fake = h_fake.normalize()
 
 h_fake_all = Hist1D(fake_id, bins = "100,-1,1") #This one is used later for taking the integrals
 h_fake_all = h_fake_all.normalize()
+print("bin widths", h_fake_all.bin_widths)
 
 h_weight = Hist1D(fake_id, bins = "40,-1,1")
 h_weight = h_weight.normalize()
@@ -177,11 +184,22 @@ sideband_cut_bound = int(sideband_cut_bound)
 print("sideband cut bound", sideband_cut_bound)
 print("n bins", h_second.nbins)
 
+def score_to_bin(score):
+	rounded_number = h_fake_all.bin_width[1] * round(abs(score) / h_fake_all.bin_width[1])
+	if score <= 0.0:
+		bin_number = (1- rounded_number) * (h_fake_all.nbins/2)
+		bin_number = int(bin_number)
+	if score  > 0.0:
+		bin_number = (h_fake_all.nbins/2) + ((1- rounded_number)*(h_fake_all.nbins/2))
+		bin_number = int(bin_number)
+	return(bin_number)
+
 omega_array = []
 for event in fake_id: 
-	for key, values in hist_idmva_low_scores.items():
-		num_max_bound = max(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
-		denom_min_bound = min(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
+	for event in events_GJets['MaxFakePhoton_mvaID']: 
+		num_max_bound = score_to_bin(event)
+	for event in events_GJets['MinFakePhoton_mvaID']: 
+		denom_min_bound = score_to_bin(event)
 	numerator = h_fake_all.counts[sideband_cut_bound : num_max_bound]
 	denominator = h_fake_all.counts[denom_min_bound : sideband_cut_bound]
 	omega = numerator / denominator
