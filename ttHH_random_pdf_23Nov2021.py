@@ -185,27 +185,29 @@ sideband_cut_bound = (0.5*(args.sideband_cut+1))*h_second.nbins
 sideband_cut_bound = int(sideband_cut_bound)
 #print("sideband cut bound", sideband_cut_bound)
 #print("n bins", h_second.nbins)
-print("test", data_in_sideband_cut.MaxPhoton_mvaID[1:2])
-print(h_second.counts[0:0])
+print("MaxPhoton_mvaID[1:2]", data_in_sideband_cut.MaxPhoton_mvaID[1:2])
+print("h_second.counts[0:0",h_second.counts[0:0])
 
-def score_to_bin(score):
-	rounded_number = h_fake_all.bin_widths[1] * round(abs(score) / h_fake_all.bin_widths[1])
-	if score <= -h_fake_all.bin_widths[1]: 
+def score_to_bin(probability):
+	rounded_number = h_fake_all.bin_widths[1] * round(abs(probability) / h_fake_all.bin_widths[1])
+	if probability <= -0.02:#-abs(h_fake_all.bin_widths[1]): 
 		bin_number = 0
-	if score <= 0.0 & score > -h_fake_all.bin_widths[1]:
+	elif probability <= 0.0 and probability > -0.02:#-abs(h_fake_all.bin_widths[1]):
 		bin_number = (1- rounded_number) * (h_fake_all.nbins/2)
 		bin_number = int(bin_number)
-	if score >= (1-h_fake_all.bin_widths[1]):
+	elif probability >= (1-h_fake_all.bin_widths[1]):
 		bin_number = h_fake_all.nbins
 		bin_number = int(bin_number)
-	if score  > 0.0 & score < (1-h_fake_all.nbins):
+	elif probability > 0.0 and probability < (1-h_fake_all.nbins):
 		bin_number = (h_fake_all.nbins/2) + ((1- rounded_number)*(h_fake_all.nbins/2))
 		bin_number = int(bin_number)
 	return(bin_number)
 
+print("attempt", score_to_bin(0.17627))
+
 omega = numpy.ones(len(data_in_sideband_cut))
 for i in range(len(data_in_sideband_cut)):  
-	num_max_bound = score_to_bin(data_in_sideband_cut.MaxPhoton_mvaID[i:i+1])
+	num_max_bound = score_to_bin(data_in_sideband_cut.MaxPhoton_mvaID[i])
 	numerator = sum(h_fake_all.counts[sideband_cut_bound : num_max_bound])
 	denominator = sum(h_fake_all.counts[1 : sideband_cut_bound])
 	omega[i] = numerator / denominator
