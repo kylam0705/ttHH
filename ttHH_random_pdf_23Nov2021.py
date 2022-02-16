@@ -98,7 +98,6 @@ h_fake = h_fake.normalize()
 
 h_fake_all = Hist1D(fake_id, bins = "100,-1,1") #This one is used later for taking the integrals
 h_fake_all = h_fake_all.normalize()
-print("bin widths", h_fake_all.bin_widths)
 
 h_weight = Hist1D(fake_id, bins = "40,-1,1")
 h_weight = h_weight.normalize()
@@ -181,52 +180,34 @@ for i in range(h_fake_all.nbins):
 	hist_idmva_low_scores[i] = round(h_second.edges[i],2) #The keys in this dictionary are the bin numbers, the values are the lower bin edge score
 
 #Bounds of Integral
-sideband_cut_bound = (0.5*(args.sideband_cut+1))*h_second.nbins
-sideband_cut_bound = int(sideband_cut_bound)
-#print("sideband cut bound", sideband_cut_bound)
-#print("n bins", h_second.nbins)
-print("MaxPhoton_mvaID[1:2]", data_in_sideband_cut.MaxPhoton_mvaID[1:2])
-print("h_second.counts[0:0",h_second.counts[0:0])
+print(data_in_sideband_cut.MaxPhoton_mvaID, "MaxPhoton_mvaID")
+print("MaxPhoton_mvaID[0:1]", data_in_sideband_cut.MaxPhoton_mvaID[0:1])
+print("sum of h_second.counts[0:50]",sum(h_second.counts[0:50]))
 
-def score_to_bin(probability):
-	rounded_number = h_fake_all.bin_widths[1] * round(abs(probability) / h_fake_all.bin_widths[1])
-	if probability <= -0.02:#-abs(h_fake_all.bin_widths[1]): 
-		bin_number = 0
-	elif probability <= 0.0 and probability > -0.02:#-abs(h_fake_all.bin_widths[1]):
-		bin_number = (1- rounded_number) * (h_fake_all.nbins/2)
-		bin_number = int(bin_number)
-	elif probability >= (1-h_fake_all.bin_widths[1]):
-		bin_number = h_fake_all.nbins
-		bin_number = int(bin_number)
-	elif probability > 0.0 and probability < (1-h_fake_all.nbins):
-		bin_number = (h_fake_all.nbins/2) + ((1- rounded_number)*(h_fake_all.nbins/2))
-		bin_number = int(bin_number)
-	return(bin_number)
+def find_nearest(array, value):
+	val = numpy.ones_like(array)*value
+	idx = (numpy.abs(array-val)).argmin()
+	return array[idx], idx
 
-print("attempt", score_to_bin(0.17627))
-
+#print("first event bin", find_nearest(h_second.edges, data_in_sideband_cut.MaxPhoton_mvaID[0:1])) #This is where the error is coming from now
+#print("h_second.edges", h_second.edges)
+print("first event bin", find_nearest(h_second.edges, 0.530273))
+unneeded, sideband_cut_bound = find_nearest(h_second.edges, args.sideband_cut)
 omega = numpy.ones(len(data_in_sideband_cut))
 for i in range(len(data_in_sideband_cut)):  
-	num_max_bound = score_to_bin(data_in_sideband_cut.MaxPhoton_mvaID[i])
+	val, num_max_bound = find_nearest(h_second.edges, data_in_sideband_cut.MaxPhoton_mvaID[i:i+1])
 	numerator = sum(h_fake_all.counts[sideband_cut_bound : num_max_bound])
-	denominator = sum(h_fake_all.counts[1 : sideband_cut_bound])
+	denominator = sum(h_fake_all.counts[0 : sideband_cut_bound])
 	omega[i] = numerator / denominator
 print(omega,"omega")
+print(num_max_bound, "num_max_bound")
+print(numerator, "numerator")
 
 #New Weights
 original_weight = data_in_sideband_cut["weight_central"]
 new_weight = original_weight * omega
 
-#Making New Parquet File
-#Correllating Events and ID's 
-#data_in_sideband_cut["Photon_mvaid"] = s_rescaled_events_array
-#date_in_sideband_cut["New_weight"] = new_weight
-
 #Concat to new parquet file
-
-
-
-
 
 
 
