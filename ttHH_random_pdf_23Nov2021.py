@@ -40,6 +40,8 @@ events_data["MinPhoton_mvaID"] = events_data[['LeadPhoton_mvaID','SubleadPhoton_
 events_data["MaxPhoton_mvaID"] = events_data[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].max(axis=1)
 data_in_sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideband_cut]
 #print(sideband_cut.size)
+#print(type(data_in_sideband_cut))
+#print(data_in_sideband_cut.columns)
 
 #Gamma + Jets Process:
 GJets_min = events_json["sample_id_map"]["GJets_HT-40To100"]
@@ -56,14 +58,19 @@ prompt_id = pandas.concat([prompt_lead_id, prompt_sublead_id])
 #Fake Photons
 fake_lead = events_GJets[events_GJets["LeadPhoton_genPartFlav"] == 0]
 fake_lead_id = fake_lead["LeadPhoton_mvaID"]
+#events_GJets["Lead_Fake_Photon_mvaID"] = fake_lead["LeadPhoton_mvaID"]
+#fake_lead_id = events_GJets["Lead_Fake_Photon_mvaID"]
 fake_sublead = events_GJets[events_GJets["SubleadPhoton_genPartFlav"] == 0]
 fake_sublead_id = fake_sublead["SubleadPhoton_mvaID"]
+#events_GJets["Sublead_Fake_Photon_mvaID"] = fake_sublead["SubleadPhoton_mvaID"]
+#fake_sublead_id = events_GJets["Sublead_Fake_Photon_mvaID"]
 #Fake ID
 fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fake photons to be inserted into the histogram h_fake
 
 #Min & Max:
-events_GJets["MinFakePhoton_mvaID"] = events_data[['fake_lead_id','fake_sublead_id']].min(axis=1)
-events_data["MaxFakePhoton_mvaID"] = events_data[['fake_lead_id','fake_sublead_id']].max(axis=1)
+#Should I first make these fake_lead_id/fake_sublead_id into columns like events_GJets['LeadFakePhoton_mvaID'] = fake_lead["LeadPhoton_mvaID"]  and then replace fake_lead_id in the next line with "Lead_Fake_Photon_mvaID" etc 
+#events_GJets["MinFakePhoton_mvaID"] = events_GJets[["Lead_Fake_Photon_mvaID", "Sublead_Fake_Photon_mvaID"]].min(axis=1) 
+#events_GJets["MaxFakePhoton_mvaID"] = events_GJets[["Lead_Fake_Photon_mvaID", "Sublead_Fake_Photon_mvaID"]].max(axis=1) 
 
 #print("min_fake_id", min(fake_id))
 #print("max_fake_id", max(fake_id))
@@ -129,9 +136,6 @@ h_attempt = h_attempt.normalize()
 h_attempt.plot(label = "Random Function", color = 'blue')
 h_fake.plot(label = "Fake Photons from GJets", color = 'orange')
 
-print("h_attempt bin counts", h_attempt.counts)
-print("bin edges", h_attempt.edges)
-
 #Labels/Aesthetics
 plt.legend(loc='upper left', bbox_to_anchor=(0.01, 0.8, 0.2, 0.2))
 plt.yscale("log")
@@ -161,8 +165,6 @@ h_first = h_first.normalize()
 h_second = Hist1D(s_rescaled_events_array, bins = "100,-1,1")
 h_second = h_second.normalize()
 
-print("h_second bin counts", h_second.counts)
-
 h_first.plot(label = "Lower Bin Score", color = 'blue', histtype = 'stepfilled', alpha = 0.8)
 h_second.plot(label = "Bin Score + random.uniform", color = 'orange', histtype = 'stepfilled', alpha = 0.8)
 
@@ -181,55 +183,37 @@ for i in range(h_fake_all.nbins):
 #Bounds of Integral
 sideband_cut_bound = (0.5*(args.sideband_cut+1))*h_second.nbins
 sideband_cut_bound = int(sideband_cut_bound)
-print("sideband cut bound", sideband_cut_bound)
-print("n bins", h_second.nbins)
+#print("sideband cut bound", sideband_cut_bound)
+#print("n bins", h_second.nbins)
+print("test", data_in_sideband_cut.MaxPhoton_mvaID[1:2])
+print(h_second.counts[0:0])
 
 def score_to_bin(score):
-	rounded_number = h_fake_all.bin_width[1] * round(abs(score) / h_fake_all.bin_width[1])
-	if score <= 0.0:
+	rounded_number = h_fake_all.bin_widths[1] * round(abs(score) / h_fake_all.bin_widths[1])
+	if score <= -h_fake_all.bin_widths[1]: 
+		bin_number = 0
+	if score <= 0.0 & score > -h_fake_all.bin_widths[1]:
 		bin_number = (1- rounded_number) * (h_fake_all.nbins/2)
 		bin_number = int(bin_number)
-	if score  > 0.0:
+	if score >= (1-h_fake_all.bin_widths[1]):
+		bin_number = h_fake_all.nbins
+		bin_number = int(bin_number)
+	if score  > 0.0 & score < (1-h_fake_all.nbins):
 		bin_number = (h_fake_all.nbins/2) + ((1- rounded_number)*(h_fake_all.nbins/2))
 		bin_number = int(bin_number)
 	return(bin_number)
 
-omega_array = []
-for event in fake_id: 
-	for event in events_GJets['MaxFakePhoton_mvaID']: 
-		num_max_bound = score_to_bin(event)
-	for event in events_GJets['MinFakePhoton_mvaID']: 
-		denom_min_bound = score_to_bin(event)
-	numerator = h_fake_all.counts[sideband_cut_bound : num_max_bound]
-	denominator = h_fake_all.counts[denom_min_bound : sideband_cut_bound]
-	omega = numerator / denominator
-	omega_array = omega_array.append(omega)
-
-#Integrals in Fraction
-##omega_array = []
-##for event in s_rescaled_events_array: 
-##	#In the histogram, the probabilities gets plotted
-##	#The numerator is the sum of the probabilities between the sideband cut and the max id score. So I need to take probabilities of the bins and add them up 
-##	for value in hist_idmva_low_scores.items(): 
-##		num_max_bound = max(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
-##		denom_min_bound = min(hist_idmva_low_scores, key = hist_idmva_low_scores.get)
-##		print("num_max_bound", num_max_bound)
-##		print("denom_min_bound", denom_min_bound)
-##		numerator = numpy.sum(h_probability.counts[sideband_cut_bound:num_max_bound])
-##		print(numerator, "numerator")
-##		denominator = numpy.sum(h_probability.counts[denom_min_bound:sideband_cut_bound])
-##		print("denominator", denominator)
-##	#numerator = integral of fake PDF from sideband cut to max gamma ID
-##	#denominator = integral of fake PDF from min value to sideband cut
-##		omega = numerator/denominator
-##		print("omega", omega)
-##		omega_array = omega_array.append(omega)
-##print("max bound", num_max_bound)
-##print("min bound", denom_min_bound)
+omega = numpy.ones(len(data_in_sideband_cut))
+for i in range(len(data_in_sideband_cut)):  
+	num_max_bound = score_to_bin(data_in_sideband_cut.MaxPhoton_mvaID[i:i+1])
+	numerator = sum(h_fake_all.counts[sideband_cut_bound : num_max_bound])
+	denominator = sum(h_fake_all.counts[1 : sideband_cut_bound])
+	omega[i] = numerator / denominator
+print(omega,"omega")
 
 #New Weights
 original_weight = data_in_sideband_cut["weight_central"]
-new_weight = original_weight * omega_array
+new_weight = original_weight * omega
 
 #Making New Parquet File
 #Correllating Events and ID's 
