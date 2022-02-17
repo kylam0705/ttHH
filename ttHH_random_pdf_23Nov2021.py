@@ -180,18 +180,14 @@ for i in range(h_fake_all.nbins):
 	hist_idmva_low_scores[i] = round(h_second.edges[i],2) #The keys in this dictionary are the bin numbers, the values are the lower bin edge score
 
 #Bounds of Integral
-print(data_in_sideband_cut.MaxPhoton_mvaID, "MaxPhoton_mvaID")
-print("MaxPhoton_mvaID[0:1]", data_in_sideband_cut.MaxPhoton_mvaID[0:1])
-print("sum of h_second.counts[0:50]",sum(h_second.counts[0:50]))
-
 def find_nearest(array, value):
 	val = numpy.ones_like(array)*value
 	idx = (numpy.abs(array-val)).argmin()
 	return array[idx], idx
 
-#print("first event bin", find_nearest(h_second.edges, data_in_sideband_cut.MaxPhoton_mvaID[0:1])) #This is where the error is coming from now
-#print("h_second.edges", h_second.edges)
-print("first event bin", find_nearest(h_second.edges, 0.530273))
+#print("MaxPhoton_mvaID[0:1]", data_in_sideband_cut.MaxPhoton_mvaID[0:1])
+#print("find nearest of 0.530273", find_nearest(h_second.edges, 0.530273))
+#print("first event bin", find_nearest(h_second.edges, data_in_sideband_cut.MaxPhoton_mvaID[0:1]))
 unneeded, sideband_cut_bound = find_nearest(h_second.edges, args.sideband_cut)
 omega = numpy.ones(len(data_in_sideband_cut))
 for i in range(len(data_in_sideband_cut)):  
