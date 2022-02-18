@@ -43,6 +43,14 @@ data_in_sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideban
 #print(type(data_in_sideband_cut))
 #print(data_in_sideband_cut.columns)
 
+#Data in Awkward Array
+events_data_ak = events_awkward[events_awkward["process_id"] == data]
+events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']])
+#events_data_ak["MaxPhoton_mvaID"] = events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].max(axis=1)
+events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']])
+#events_data_ak["MinPhoton_mvaID"] = events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis=1)
+data_in_sideband_ak = events_data_ak[events_data_ak["MinPhoton_mvaID"] < args.sideband_cut]
+
 #Gamma + Jets Process:
 GJets_min = events_json["sample_id_map"]["GJets_HT-40To100"]
 GJets_max = events_json["sample_id_map"]["GJets_HT-600ToInf"]
@@ -185,13 +193,19 @@ def find_nearest(array, value):
 	idx = (numpy.abs(array-val)).argmin()
 	return array[idx], idx
 
+
+#data_in_sideband_numpy = data_in_sideband_cut.MaxPhoton_mvaID.to_numpy()
+#max_data_in_sideband_ak = awkward.from_numpy(data_in_sideband_numpy)
+#print("data_in_sideband_ak.columns", data_in_sideband_ak.columns)
 #print("MaxPhoton_mvaID[0:1]", data_in_sideband_cut.MaxPhoton_mvaID[0:1])
-#print("find nearest of 0.530273", find_nearest(h_second.edges, 0.530273))
-#print("first event bin", find_nearest(h_second.edges, data_in_sideband_cut.MaxPhoton_mvaID[0:1]))
-unneeded, sideband_cut_bound = find_nearest(h_second.edges, args.sideband_cut)
-omega = numpy.ones(len(data_in_sideband_cut))
-for i in range(len(data_in_sideband_cut)):  
-	val, num_max_bound = find_nearest(h_second.edges, data_in_sideband_cut.MaxPhoton_mvaID[i:i+1])
+#print("find nearest of 0.530273", find_nearest(h_second.bin_centers, 0.530273))
+#print("first event bin", find_nearest(h_second.bin_centers, data_in_sideband_cut.MaxPhoton_mvaID[0:1]))
+print("data_in_sideband_ak.MaxPhoton_mvaID", data_in_sideband_ak.MaxPhoton_mvaID)
+
+unneeded, sideband_cut_bound = find_nearest(h_second.bin_centers, args.sideband_cut)
+omega = numpy.ones(len(data_in_sideband_ak))
+for i in range(len(data_in_sideband_ak)):
+	val, num_max_bound = find_nearest(h_second.bin_centers, data_in_sideband_ak.MaxPhoton_mvaID[i])
 	numerator = sum(h_fake_all.counts[sideband_cut_bound : num_max_bound])
 	denominator = sum(h_fake_all.counts[0 : sideband_cut_bound])
 	omega[i] = numerator / denominator
