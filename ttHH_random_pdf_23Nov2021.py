@@ -45,11 +45,11 @@ data_in_sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideban
 
 #Data in Awkward Array
 events_data_ak = events_awkward[events_awkward["process_id"] == data]
-events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']])
-#events_data_ak["MaxPhoton_mvaID"] = events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].max(axis=1)
-events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']])
-#events_data_ak["MinPhoton_mvaID"] = events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis=1)
+events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
+events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
 data_in_sideband_ak = events_data_ak[events_data_ak["MinPhoton_mvaID"] < args.sideband_cut]
+#print("data columns", events_data_ak.fields)
+print("Max data", events_data.MaxPhoton_mvaID)
 
 #Gamma + Jets Process:
 GJets_min = events_json["sample_id_map"]["GJets_HT-40To100"]
@@ -193,7 +193,8 @@ def find_nearest(array, value):
 	idx = (numpy.abs(array-val)).argmin()
 	return array[idx], idx
 
-
+print("length of data_in_sideband_cut", len(data_in_sideband_cut))
+print("length of ak data in sideband_cut", len(data_in_sideband_ak))
 #data_in_sideband_numpy = data_in_sideband_cut.MaxPhoton_mvaID.to_numpy()
 #max_data_in_sideband_ak = awkward.from_numpy(data_in_sideband_numpy)
 #print("data_in_sideband_ak.columns", data_in_sideband_ak.columns)
