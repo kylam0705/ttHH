@@ -44,15 +44,22 @@ data_in_sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideban
 #Data in Awkward Array
 events_data_ak = events_awkward[events_awkward["process_id"] == data]
 #print("fields", events_data_ak.fields)
-events_data_ak["Photon_mvaID"] = awkward.concatenate([events_data_ak.LeadPhoton_mvaID, events_data_ak.SubleadPhoton_mvaID], axis = 1)
-print("Photon_mvaID", events_awkward.Photon_mvaID)
+events_data_ak["Photon_mvaID"] = awkward.concatenate(
+	[
+		awkward.unflatten(events_data_ak.LeadPhoton_mvaID, 1),
+		awkward.unflatten(events_data_ak.SubleadPhoton_mvaID, 1)
+	],
+	axis = 1
+)
+
+#print("Photon_mvaID", events_data_ak.Photon_mvaID)
 events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak.Photon_mvaID, axis = 1)
 events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak.Photon_mvaID, axis = 1)
 #events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
 #events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
 data_in_sideband_ak = events_data_ak[events_data_ak["MinPhoton_mvaID"] < args.sideband_cut]
-print("data columns", events_data_ak.fields)
-print("Max data", events_data_ak.MaxPhoton_mvaID)
+#print("data columns", events_data_ak.fields)
+#print("Max data", events_data_ak.MaxPhoton_mvaID)
 
 #Gamma + Jets Process:
 GJets_min = events_json["sample_id_map"]["GJets_HT-40To100"]
@@ -196,15 +203,9 @@ def find_nearest(array, value):
 	idx = (numpy.abs(array-val)).argmin()
 	return array[idx], idx
 
-print("length of data_in_sideband_cut", len(data_in_sideband_cut))
-print("length of ak data in sideband_cut", len(data_in_sideband_ak))
-#data_in_sideband_numpy = data_in_sideband_cut.MaxPhoton_mvaID.to_numpy()
-#max_data_in_sideband_ak = awkward.from_numpy(data_in_sideband_numpy)
-#print("data_in_sideband_ak.columns", data_in_sideband_ak.columns)
-#print("MaxPhoton_mvaID[0:1]", data_in_sideband_cut.MaxPhoton_mvaID[0:1])
-#print("find nearest of 0.530273", find_nearest(h_second.bin_centers, 0.530273))
-#print("first event bin", find_nearest(h_second.bin_centers, data_in_sideband_cut.MaxPhoton_mvaID[0:1]))
-print("data_in_sideband_ak.MaxPhoton_mvaID", data_in_sideband_ak.MaxPhoton_mvaID)
+#print("length of data_in_sideband_cut", len(data_in_sideband_cut))
+#print("length of ak data in sideband_cut", len(data_in_sideband_ak))
+#print("data_in_sideband_ak.MaxPhoton_mvaID", data_in_sideband_ak.MaxPhoton_mvaID)
 
 unneeded, sideband_cut_bound = find_nearest(h_second.bin_centers, args.sideband_cut)
 omega = numpy.ones(len(data_in_sideband_ak))
@@ -214,12 +215,14 @@ for i in range(len(data_in_sideband_ak)):
 	denominator = sum(h_fake_all.counts[0 : sideband_cut_bound])
 	omega[i] = numerator / denominator
 print(omega,"omega")
-print(num_max_bound, "num_max_bound")
-print(numerator, "numerator")
+#print(num_max_bound, "num_max_bound")
+#print(numerator, "numerator")
 
 #New Weights
 original_weight = data_in_sideband_cut["weight_central"]
 new_weight = original_weight * omega
+print("original_weight", original_weight)
+print("new_weight", new_weight)
 
 #Concat to new parquet file
 
