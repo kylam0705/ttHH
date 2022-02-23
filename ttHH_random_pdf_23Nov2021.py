@@ -42,12 +42,12 @@ data_in_sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideban
 #print(data_in_sideband_cut.columns)
 
 #Data in Awkward Array
-#events_data_ak = events_awkward[events_awkward["process_id"] == data]
+events_data_ak = events_awkward[events_awkward["process_id"] == data]
 #print("fields", events_data_ak.fields)
-events_awkward["Photon_mvaID"] = awkward.concatenate(['LeadPhoton_mvaID', 'SubleadPhoton_mvaID'], axis = 1)
+events_data_ak["Photon_mvaID"] = awkward.concatenate([events_data_ak.LeadPhoton_mvaID, events_data_ak.SubleadPhoton_mvaID], axis = 1)
 print("Photon_mvaID", events_awkward.Photon_mvaID)
-events_akward["MaxPhoton_mvaID"] = awkward.max(events_awkward.Photon_mvaID, axis = 1)
-events_awkward["MinPhoton_mvaID"] = awkward.min(events_awkward.Photon_mvaID, axis = 1)
+events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak.Photon_mvaID, axis = 1)
+events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak.Photon_mvaID, axis = 1)
 #events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
 #events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
 data_in_sideband_ak = events_data_ak[events_data_ak["MinPhoton_mvaID"] < args.sideband_cut]
