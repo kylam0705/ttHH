@@ -39,17 +39,20 @@ events_data = events[events["process_id"] == data]
 events_data["MinPhoton_mvaID"] = events_data[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis=1)
 events_data["MaxPhoton_mvaID"] = events_data[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].max(axis=1)
 data_in_sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideband_cut]
-#print(sideband_cut.size)
-#print(type(data_in_sideband_cut))
 #print(data_in_sideband_cut.columns)
 
 #Data in Awkward Array
-events_data_ak = events_awkward[events_awkward["process_id"] == data]
-events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
-events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
+#events_data_ak = events_awkward[events_awkward["process_id"] == data]
+#print("fields", events_data_ak.fields)
+events_awkward["Photon_mvaID"] = awkward.concatenate(['LeadPhoton_mvaID', 'SubleadPhoton_mvaID'], axis = 1)
+print("Photon_mvaID", events_awkward.Photon_mvaID)
+events_akward["MaxPhoton_mvaID"] = awkward.max(events_awkward.Photon_mvaID, axis = 1)
+events_awkward["MinPhoton_mvaID"] = awkward.min(events_awkward.Photon_mvaID, axis = 1)
+#events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
+#events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
 data_in_sideband_ak = events_data_ak[events_data_ak["MinPhoton_mvaID"] < args.sideband_cut]
-#print("data columns", events_data_ak.fields)
-print("Max data", events_data.MaxPhoton_mvaID)
+print("data columns", events_data_ak.fields)
+print("Max data", events_data_ak.MaxPhoton_mvaID)
 
 #Gamma + Jets Process:
 GJets_min = events_json["sample_id_map"]["GJets_HT-40To100"]
