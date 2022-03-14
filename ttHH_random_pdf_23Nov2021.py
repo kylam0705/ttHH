@@ -33,6 +33,17 @@ json_file = open("/home/users/smay/public_html/forKyla/summary.json")
 events_json = json.load(json_file)
 json_file.close()
 
+#New Columns in Awkward Array
+events_awkward["Photon_mvaID"] = awkward.concatenate(
+	[
+		awkward.unflatten(events_awkward.LeadPhoton_mvaID, 1), 
+		awkward.unflatten(events_awkward.SubleadPhoton_mvaID, 1)
+	],
+	axis = 1
+)
+events_awkward["MaxPhoton_mvaID"] = awkward.max(events_awkward.Photon_mvaID, axis = 1)
+events_awkward["MinPhoton_mvaID"] = awkward.min(events_awkward.Photon_mvaID, axis = 1)
+
 #Data
 data = events_json["sample_id_map"]["Data"]
 events_data = events[events["process_id"] == data]
@@ -43,20 +54,15 @@ data_in_sideband_cut = events_data[events_data["MinPhoton_mvaID"] < args.sideban
 
 #Data in Awkward Array
 events_data_ak = events_awkward[events_awkward["process_id"] == data]
-#print("fields", events_data_ak.fields)
-events_data_ak["Photon_mvaID"] = awkward.concatenate(
-	[
-		awkward.unflatten(events_data_ak.LeadPhoton_mvaID, 1),
-		awkward.unflatten(events_data_ak.SubleadPhoton_mvaID, 1)
-	],
-	axis = 1
-)
-
-#print("Photon_mvaID", events_data_ak.Photon_mvaID)
-events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak.Photon_mvaID, axis = 1)
-events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak.Photon_mvaID, axis = 1)
-#events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
-#events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak[['LeadPhoton_mvaID','SubleadPhoton_mvaID']], axis=1)
+#events_data_ak["Photon_mvaID"] = awkward.concatenate(
+#	[
+#		awkward.unflatten(events_data_ak.LeadPhoton_mvaID, 1),
+#		awkward.unflatten(events_data_ak.SubleadPhoton_mvaID, 1)
+#	],
+#	axis = 1
+#)
+#events_data_ak["MaxPhoton_mvaID"] = awkward.max(events_data_ak.Photon_mvaID, axis = 1)
+#events_data_ak["MinPhoton_mvaID"] = awkward.min(events_data_ak.Photon_mvaID, axis = 1)
 data_in_sideband_ak = events_data_ak[events_data_ak["MinPhoton_mvaID"] < args.sideband_cut]
 #print("data columns", events_data_ak.fields)
 #print("Max data", events_data_ak.MaxPhoton_mvaID)
@@ -92,12 +98,6 @@ fake_id = pandas.concat([fake_lead_id, fake_sublead_id]) #Creates an array of fa
 
 #print("min_fake_id", min(fake_id))
 #print("max_fake_id", max(fake_id))
-
-#More Columns in the Dataframe
-#min_value_series = events[['LeadPhoton_mvaID','SubleadPhoton_mvaID']].min(axis=1)
-#events["MinPhoton_mvaID"] = min_value_series
-#events_photon_sideband_cut = events[events["MinPhoton_mvaID"] > -0.67]
-#events_photon_preselection_cut = events[events["max_pho_idmva"] > -0.67]
 
 #Making the Fake PDF Histogram
 f = plt.figure()
@@ -214,15 +214,51 @@ for i in range(len(data_in_sideband_ak)):
 	numerator = sum(h_fake_all.counts[sideband_cut_bound : num_max_bound])
 	denominator = sum(h_fake_all.counts[0 : sideband_cut_bound])
 	omega[i] = numerator / denominator
-print(omega,"omega")
+#print(omega,"omega")
 #print(num_max_bound, "num_max_bound")
 #print(numerator, "numerator")
 
 #New Weights
 original_weight = data_in_sideband_cut["weight_central"]
 new_weight = original_weight * omega
-print("original_weight", original_weight)
-print("new_weight", new_weight)
+#print("original_weight", original_weight)
+#print("new_weight", new_weight)
+
+#Total Normational
+Diphoton = events_json["sample_id_map"]["Diphoton"] 
+HH_ggbb = events_json["sample_id_map"]["HH_ggbb"] 
+HHggTauTau = events_json["sample_id_map"]["HHggTauTau"] 
+TTGG = events_json["sample_id_map"]["TTGG"]
+TTGamma = events_json["sample_id_map"]["TTGamma"]
+TTJets = events_json["sample_id_map"]["TTJets"] 
+VBFH_M125 = events_json["sample_id_map"]["VBFH_M125"]
+VH_M125 = events_json["sample_id_map"]["VH_M125"]
+WGamma = events_json["sample_id_map"]["WGamma"]
+ZGamma = events_json["sample_id_map"]["ZGamma"]
+ggH_M125 = events_json["sample_id_map"]["ggH_M125"] 
+ttH_M125 = events_json["sample_id_map"]["ttH_M125"]
+
+len_gg = len(events_awkward[events_awkward["process_id"] == Diphoton])  
+len_hhggbb = len(events_awkward[events_awkward["process_id"] == HH_ggbb]) 
+len_hhggtt = len(events_awkward[events_awkward["process_id"] == HHggTauTau]) 
+len_ttgg = len(events_awkward[events_awkward["process_id"] == TTGG]) 
+len_ttgamma = len(events_awkward[events_awkward["process_id"] == TTGamma]) 
+len_ttjets = len(events_awkward[events_awkward["process_id"] == TTJets]) 
+len_vbfh = len(events_awkward[events_awkward["process_id"] == VBFH_M125]) 
+len_vh = len(events_awkward[events_awkward["process_id"] == VH_M125]) 
+len_wgamma = len(events_awkward[events_awkward["process_id"] == WGamma]) 
+len_zgamma = len(events_awkward[events_awkward["process_id"] == ZGamma]) 
+len_ggh = len(events_awkward[events_awkward["process_id"] == ggH_M125]) 
+len_ttH = len(events_awkward[events_awkward["process_id"] == ttH_M125])
+
+events_except_GJets = len_gg + len_hhggbb + len_hhggtt + len_ttgg + len_ttgamma + len_ttjets + len_vbfh + len_vh + len_wgamma + len_zgamma + len_ggh + len_ttH
+print(events_except_GJets, "events_except_GJets")
+print(len(events_data), "events_data")
+
+n_GJets_events = len(events_data) - events_except_GJets
+print(n_GJets_events, "n_GJets_events")
+scale_factor = len(events_awkward) / n_GJets_events
+print(scale_factor)
 
 #Concat to new parquet file
 
