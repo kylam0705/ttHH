@@ -225,39 +225,17 @@ new_weight = original_weight * omega
 #print("new_weight", new_weight)
 
 #Total Normational
-Diphoton = events_json["sample_id_map"]["Diphoton"] 
-HH_ggbb = events_json["sample_id_map"]["HH_ggbb"] 
-HHggTauTau = events_json["sample_id_map"]["HHggTauTau"] 
-TTGG = events_json["sample_id_map"]["TTGG"]
-TTGamma = events_json["sample_id_map"]["TTGamma"]
-TTJets = events_json["sample_id_map"]["TTJets"] 
-VBFH_M125 = events_json["sample_id_map"]["VBFH_M125"]
-VH_M125 = events_json["sample_id_map"]["VH_M125"]
-WGamma = events_json["sample_id_map"]["WGamma"]
-ZGamma = events_json["sample_id_map"]["ZGamma"]
-ggH_M125 = events_json["sample_id_map"]["ggH_M125"] 
-ttH_M125 = events_json["sample_id_map"]["ttH_M125"]
+n_total_bkg = 0
+other_bkgs = ["Diphoton", "HH_ggbb", "HHggTauTau", "TTGG", "TTGamma", "TTJets", "VBFH_M125", "VH_M125", "WGamma", "ZGamma", "ggH_M125", "ttH_M125"]
+for bkg in other_bkgs: 
+	events_bkg =  events_awkward[events_awkward["process_id"] == events_json["sample_id_map"][bkg]]
+	n_bkg = awkward.sum(events_bkg.weight_central)
+	n_total_bkg += n_bkg
 
-len_gg = len(events_awkward[events_awkward["process_id"] == Diphoton])  
-len_hhggbb = len(events_awkward[events_awkward["process_id"] == HH_ggbb]) 
-len_hhggtt = len(events_awkward[events_awkward["process_id"] == HHggTauTau]) 
-len_ttgg = len(events_awkward[events_awkward["process_id"] == TTGG]) 
-len_ttgamma = len(events_awkward[events_awkward["process_id"] == TTGamma]) 
-len_ttjets = len(events_awkward[events_awkward["process_id"] == TTJets]) 
-len_vbfh = len(events_awkward[events_awkward["process_id"] == VBFH_M125]) 
-len_vh = len(events_awkward[events_awkward["process_id"] == VH_M125]) 
-len_wgamma = len(events_awkward[events_awkward["process_id"] == WGamma]) 
-len_zgamma = len(events_awkward[events_awkward["process_id"] == ZGamma]) 
-len_ggh = len(events_awkward[events_awkward["process_id"] == ggH_M125]) 
-len_ttH = len(events_awkward[events_awkward["process_id"] == ttH_M125])
+n_data = sum(events_data_ak.weight_central)
 
-events_except_GJets = len_gg + len_hhggbb + len_hhggtt + len_ttgg + len_ttgamma + len_ttjets + len_vbfh + len_vh + len_wgamma + len_zgamma + len_ggh + len_ttH
-print(events_except_GJets, "events_except_GJets")
-print(len(events_data), "events_data")
-
-n_GJets_events = len(events_data) - events_except_GJets
-print(n_GJets_events, "n_GJets_events")
-scale_factor = len(events_awkward) / n_GJets_events
+n_GJets = n_data - n_total_bkg
+scale_factor = sum(events_awkward.weight_central) / n_GJets
 print(scale_factor)
 
 #Concat to new parquet file
