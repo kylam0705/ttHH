@@ -238,6 +238,9 @@ n_GJets = n_data - n_total_bkg
 scale_factor = sum(events_awkward.weight_central) / n_GJets
 print(scale_factor)
 
+total_normal_weight = new_weight * scale_factor
+print(total_normal_weight, "total_normal_weight")
+
 #Concat to new parquet file
 
 
