@@ -224,6 +224,8 @@ new_weight = original_weight * omega
 #print("original_weight", original_weight)
 #print("new_weight", new_weight)
 
+print(events_awkward.fields, "events_awkward.fields")
+
 #Total Normational
 n_total_bkg = 0
 other_bkgs = ["Diphoton", "HH_ggbb", "HHggTauTau", "TTGG", "TTGamma", "TTJets", "VBFH_M125", "VH_M125", "WGamma", "ZGamma", "ggH_M125", "ttH_M125"]
@@ -242,8 +244,10 @@ total_normal_weight = new_weight * scale_factor
 print(total_normal_weight, "total_normal_weight")
 
 #Concat to new parquet file
+events_awkward["scaled_weight_central"] = awkward.concatenate([new_weight,events_awkward])
+events_awkward["total_normalization"] = awkward.concatenate([total_normal_weight, events_awkward])
 
-
+print(events_awkward.fields, "events_awkward.fields")
 
 
 
