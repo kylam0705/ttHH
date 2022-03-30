@@ -107,7 +107,6 @@ def round_down(n, decimals):
 	rounded_number = math.floor(n * multiplier) / multiplier
 	return rounded_number
 
-
 lower_range = float(round_down(args.sideband_cut, 1))
 n_bins = int((1-lower_range)/0.05)
 
@@ -243,11 +242,27 @@ print(scale_factor)
 total_normal_weight = new_weight * scale_factor
 print(total_normal_weight, "total_normal_weight")
 
-#Concat to new parquet file
-events_awkward["scaled_weight_central"] = awkward.concatenate([new_weight,events_awkward])
-events_awkward["total_normalization"] = awkward.concatenate([total_normal_weight, events_awkward])
+print(len(plotted_pdf), "plotted_pdf")
+print(len(data_in_sideband_ak), "length of events reinserted into preselection")
 
-print(events_awkward.fields, "events_awkward.fields")
+#Concat to new parquet file
+#events_dd should have all the same fields as events_awkward with the fields "MinPhoton_mvaID", "process_id", and "weight_central" (per events and overall normalization factor) updated
+events_dd = awkward.Array([
+	{"MinPhoton_mvaID":plotted_pdf,
+	"process_id" : '21',
+	"weight_central":new_weight}
+])
+
+print(events_dd, "events_dd")
+
+events_all = awkward.concatenate([events_awkward, events_dd])
+print(events_all, "events_all")
+#awkward.to_parquet(events_all, "merged_nominal_with_data_drives_qcdgjets.parquet")
+
+
+
+
+
 
 
 
