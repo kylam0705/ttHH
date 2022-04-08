@@ -20,7 +20,7 @@ from numpy import nan
 
 #Parquet File
 #events_awkward = awkward.from_parquet(args.input_parquet)
-events = awkward.from_parquet("/home/users/smay/public_html/forKyla/merged_nominal.parquet")
+events = awkward.from_parquet("/home/users/kmartine/public_html/ttHH_python_codes/presel_with_dd_estimate.parquet")
 
 #JSON File
 json_file = open("/home/users/smay/public_html/forKyla/summary.json")
@@ -28,11 +28,11 @@ events_json = json.load(json_file)
 json_file.close()
 
 #Function to make a plot of signal, MC, and data with ratio panel below 
-def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjets_mc_weight, hh_ggbb_mc, hh_ggbb_mc_weight, ttgg_mc, ttgg_mc_weight, ttg_mc, ttg_mc_weight, ttbar_mc, ttbar_mc_weight, vh_mc, vh_mc_weight, wgamma_mc, wgamma_mc_weight, zgamma_mc, zgamma_mc_weight, tthh_ggbb, tthh_ggbb_weight, tthh_ggWW, tthh_ggWW_weight, tthh_ggTauTau, tthh_ggTauTau_weight, **kwargs)
+def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjets_mc_weight, hh_ggbb_mc, hh_ggbb_mc_weight, ttgg_mc, ttgg_mc_weight, ttg_mc, ttg_mc_weight, ttbar_mc, ttbar_mc_weight, vh_mc, vh_mc_weight, wgamma_mc, wgamma_mc_weight, zgamma_mc, zgamma_mc_weight, tthh_ggbb, tthh_ggbb_weight, tthh_ggWW, tthh_ggWW_weight, tthh_ggTauTau, tthh_ggTauTau_weight, **kwargs):
 
 	normalize = kwargs.get("normalize", False)
 	x_label = kwargs.get("x_label", None)
-	y_label = kwargs.get("y_label", "Events" if not normalize else "Fraction of Events"
+	y_label = kwargs.get("y_label", "Events" if not normalize else "Fraction of Events")
 	rat_label = kwargs.get("rat_label", "Data/MC")
 	title = kwargs.get("title", None)
 	y_lim = kwargs.get("y_lim", None)
@@ -176,9 +176,9 @@ for events, presel_name in zip([events_1lep_4jets_0tau, events_0lep_5jets_0tau, 
 			mc = mc,
 			mc_weight = events_mc["weight"],
 			gg_mc = gg_mc,
-			gg_mc_weight = events_mc["weight"],
+			gg_mc_weight = events_gg_mc["weight"],
 			gjets_mc = gjets_mc,
-			gjets_mc = events_gjets_mc["weight"],
+			gjets_mc_weight = events_gjets_mc["weight"],
 			hh_ggbb_mc = hh_ggbb_mc,
 			hh_ggbb_mc_weight = events_hh_ggbb_mc["weight"],
 			ttgg_mc = ttgg_mc,
@@ -201,7 +201,7 @@ for events, presel_name in zip([events_1lep_4jets_0tau, events_0lep_5jets_0tau, 
 			tthh_ggWW = tthh_ggWW, 
 			tthh_ggWW_weight = events_tthh_ggWW["weight"], 
 			tthh_ggTauTau = tthh_ggTauTau,
-			tthh_ggTauTau = events_tthh_ggTauTau["weight"],
+			tthh_ggTauTau_weight = events_tthh_ggTauTau["weight"],
 			**plot_info
 		)
 
