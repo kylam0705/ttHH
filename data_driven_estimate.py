@@ -42,6 +42,7 @@ for i in range(3):
     print("Sublead mva ID", events.SubleadPhoton_mvaID[i])
     print("Max mva ID", events.MaxPhoton_mvaID[i])
     print("Min mva ID", events.MinPhoton_mvaID[i])
+    print('...')
 
 # 2.1 Split events into preselection events and sideband events
 presel_events = events[(events.MinPhoton_mvaID > args.sideband_cut) & (events.MaxPhoton_mvaID > args.sideband_cut)]
@@ -49,6 +50,9 @@ sideband_events = events[(events.MinPhoton_mvaID < args.sideband_cut) & (events.
 
 # 2.2 Collect data events out of the sideband events
 sideband_events_data = sideband_events[sideband_events.process_id == process_id_map["Data"]]
+
+# 2.3 Collect all of the data events which will be used under 4.2
+data_events = events[events.process_id == process_id_map["Data"]]
 
 # 3. Derive pdf for fake photons from GJets MC
 # 3.1 Select GJets events
@@ -72,6 +76,7 @@ fake_id = awkward.concatenate([
 # prompt photons should have higher mva ID than fake photons on average
 print("Mean photon ID MVA value for prompt photons: ", awkward.mean(prompt_id))
 print("Mean photon ID MVA value for fake photons: ", awkward.mean(fake_id))
+print('...')
 
 # 3.2 Create the fake pdf histogram
 # Make a function to determine the number of bins and the lower edge of the histogram
@@ -80,20 +85,20 @@ def round_down(n, decimals):
 	rounded_number = math.floor(n * multiplier) / multiplier
 	return rounded_number 
 
-lower_range = float(round_down(args.sideband_cut, 1))
-n_bins = int((1-lower_range)/0.05) 
+lower_range = float(round_down(args.sideband_cut, 1)) #This is the lower histogram edge based on the sideband cut
+n_bins = int((1-lower_range)/0.05) #This is the number of bins in the histogram with a width of 0.05
 
 #  Plots
 f = plt.figure()
 h_fake_sideband_cut_to_one = Hist1D(fake_id, bins = "%d, %.1f, 1" %(n_bins, lower_range), overflow=False)
-h_fake_sideband_cut_to_one = h_fake.normalize #This is a plot of the fake photons from GJets MC
+h_fake_sideband_cut_to_one = h_fake_sideband_cut_to_one.normalize #This is a plot of the fake photons from GJets MC
 
-fig = plt.figure()
-h_fake_minus_one_to_one = Hist1D(fake_id, bins = "100,-1,1", ovrflow = False)
+h_fake_minus_one_to_one = Hist1D(fake_id, bins = "100,-1,1", overflow = False)
 h_fake_minus_one_to_one = h_fake_minus_one_to_one.normalize()
 
+h_fake_minus_one_to_one.plot(label = "Fake ID PDF", color = 'blue', alpha = 0.8)
+
 # Labels/Aesthetics
-plt.legend(loc='upper left', bbox_to_anchor=(0.01, 0.8, 0.2,0.2))
 plt.yscale("log")
 plt.xlabel("ID MVA Score")
 plt.ylabel("Normalized Events")
@@ -101,28 +106,25 @@ plt.title("Fake Photon ID MVA in GJets")
 
 plt.show()
 f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_pdf_mvaid.pdf")
-fig.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_photons_mvaid.pdf")
 
 # 3.3 Define a function for generating an arbitrary number of events from the fake pdf
-def generate_from_fake_pdf(fake_pdf, n):
+def generate_from_fake_pdf(fake_pdf, n): 
     """
     Returns a 1d array of length n of values generated from a binned probability distribution `fake_pdf`
-    """
-    # your implementation from old code here
-    #So I think I need to adapt my code to take the inputs as well, though it could work out because in my old code I had to do this twice based on the range of the histogram I was using 
-    Last_bin = n_bins
+    """ 
+    Last_bin = n
     First_bin = 0
 
-    p_bins = h_fake_sideband_cut_to_one[First_bin:Last_bin]
-    p = p_bins/numpy.sum(p_bins)
+    p_bins = fake_pdf.counts[First_bin:Last_bin]
+    p = p_bins/numpy.sum(p_bins) #This normalizes the probabilities in case that wasn't already done
 
-    randomly_generated_scores = numpy.random.choice(a = n_bins, size = sideband_events_data.size, p = p) #Here, the random values are assigned from the sideband cut to the highest score so this is based on the h_fake_sideband_cut_to_one histogram 
-    full_range_randomly_generated_scores = numpy.random.choice(a = 100, size = sideband_events_data.size, h_fake_minus_one_to_one.counts) #This one gives a random score over the whole range 
+    randomly_generated_scores = numpy.random.choice(a = n, size = awkward.size(sideband_events_data, axis=0), p = p) #Here, the random values are assigned from the sideband cut to the highest score in the histogram
+    return randomly_generated_scores 
 
 # 4. Add data-driven events into preselection array
 # 4.1 Set their min photon ID MVA score equal to the values randomly generated according to the fake PDF
 generated_photon_id_scores = awkward.ones_like(sideband_events_data.LeadPhoton_mvaID) # dummy array of all 1's, you should update with your function for generating the scores
-generated_photon_id_scores = #Insert function that generates the scores
+generated_photon_id_scores = generate_from_fake_pdf(h_fake_minus_one_to_one, 100)
 sideband_events_data["MinPhoton_mvaID"] = generated_photon_id_scores
 
 # 4.2 Apply the per-event and overall normalization factors to the central weight of data sideband events
@@ -132,24 +134,21 @@ def find_nearest(array,value): #This array will give you an array of and the bin
 	idx = (numpy.abs(array-val)).argmin()
 	return array[idx], idx
 
-unneeded, sideband_cut_bound = find_nearest("histogram of the events with random scores from (-1,1)", args.sideband_cut)
+unneeded, sideband_cut_bound = find_nearest(h_fake_minus_one_to_one.bin_centers, args.sideband_cut)
 omega = numpy.ones(len(sideband_events_data)) #Omega is the per-event scale factor
-for i in range(len(sideband_events_data): 
-	val, num_max_bound = find_nearest("histogram mentioned above", sideband_events_data.MaxPhoton_mvaID[i])
+for i in range(len(sideband_events_data)): 
+	val, num_max_bound = find_nearest(h_fake_minus_one_to_one.bin_centers, sideband_events_data.MaxPhoton_mvaID[i])
 	numerator = sum(h_fake_minus_one_to_one.counts[sideband_cut_bound:num_max_bound])
-	denominator = sum(h_fake_minus_one_to_one.counts[0:sideband_cut_bound]
+	denominator = sum(h_fake_minus_one_to_one.counts[0:sideband_cut_bound])
 	omega[i] = numerator / denominator
 
 # check that omega looks correct for the first few events
 for i in range(5):
 	print("Per-event scale factor:", omega[i])
+print('...')
 
 #4.2.B Apply the per-event normalization 
 sideband_events_data["weight_central"] = sideband_events_data.weight_central * omega
-
-# check that these events are scaled correctly
-for i in range(5):
-	print("Events weight scaled by omega:", sideband_events_data.weight_central[i])
 
 # 4.2.C Find the overall normalization factor
 n_total_bkg = 0 
@@ -159,9 +158,12 @@ for bkg in other_bkgs:
 	n_bkg = awkward.sum(events_bkg.weight_central)
 	n_total_bkg += n_bkg
 
-n_data 
-n_GJets 
+n_data = sum(data_events.weight_central)
+n_GJets = n_data - n_total_bkg
 total_norm_factor = sum(events.weight_central) / n_GJets
+
+#Check the overall normalization factor 
+print("Overall normalization factor:", total_norm_factor)
 
 # 4.3.D Apply the overall normalization factor
 sideband_events_data["weight_central"] = sideband_events_data.weight_central * total_norm_factor
