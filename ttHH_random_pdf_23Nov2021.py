@@ -129,6 +129,7 @@ p = p_bins/numpy.sum(p_bins) #p-value in the random.choice function
 #Making the PDF Histogram
 fake_photons_pdf = numpy.random.choice(a=n_bins, size = data_in_sideband_cut.size, p=p) #fake_photons is an array of integers that identifies the bin. I need to convert the identified bins to idmva scores in the [sideband_cut,1] range ie new_pdf
 #print("min fake_photons_pdf", min(fake_photons_pdf))
+print("fake_photons_pdf", fake_photons_pdf)
 
 hist_idmva_low = {}
 for i in range(h_weight.nbins): 
@@ -137,13 +138,14 @@ for i in range(h_weight.nbins):
 new_pdf = []
 new_pdf = [hist_idmva_low[key] for key in fake_photons_pdf] #This array is the lower bin edge scores of the fake_photon_pdf array of bin numbers
 new_pdf_array = numpy.array(new_pdf)
-#print("Min pdf array", min(new_pdf_array))
+print("new_pdf_array", new_pdf_array)
+print("Min pdf array", min(new_pdf_array))
 
 low = new_pdf_array
 high = new_pdf_array + round(h_fake.bin_widths[1],2)
 size = new_pdf_array.size
 plotted_pdf = numpy.random.uniform(low = low, high= high, size = new_pdf_array.size) #This is the new array that needs to be plotted 
-#print("min plotted_pdf: ", min(plotted_pdf))
+print("min plotted_pdf: ", min(plotted_pdf))
 
 h_attempt = Hist1D(plotted_pdf, bins = "%d,%.1f,1" %(n_bins, lower_range), overflow=False)
 h_attempt = h_attempt.normalize()
@@ -172,7 +174,8 @@ rescaled_events = [hist_idmva_low[key] for key in random_choice_function]
 f_rescaled_events_array = numpy.array(rescaled_events)
 size_new = f_rescaled_events_array.size
 s_rescaled_events_array = f_rescaled_events_array + numpy.random.uniform(low = 0, high = round(h_weight.bin_widths[1],3), size = size_new) #This array allocates a score to an event based on the bin value
-#print("second rescaled_events_array", s_rescaled_events_array)
+print("first rescaled_events_array", f_rescaled_events_array)
+print("second rescaled_events_array", s_rescaled_events_array)
 
 #Histograms
 fig = plt.figure()
@@ -247,16 +250,16 @@ print(len(data_in_sideband_ak), "length of events reinserted into preselection")
 
 #Concat to new parquet file
 #events_dd should have all the same fields as events_awkward with the fields "MinPhoton_mvaID", "process_id", and "weight_central" (per events and overall normalization factor) updated
-events_dd = awkward.Array([
-	{"MinPhoton_mvaID":plotted_pdf,
-	"process_id" : '21',
-	"weight_central":new_weight}
-])
+#events_dd = awkward.Array([
+#	{"MinPhoton_mvaID":plotted_pdf,
+#	"process_id" : '21',
+#	"weight_central":new_weight}
+#])
 
-print(events_dd, "events_dd")
+#print(events_dd, "events_dd")
 
-events_all = awkward.concatenate([events_awkward, events_dd])
-print(events_all, "events_all")
+#events_all = awkward.concatenate([events_awkward, events_dd])
+#print(events_all, "events_all")
 #awkward.to_parquet(events_all, "merged_nominal_with_data_drives_qcdgjets.parquet")
 
 
