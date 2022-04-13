@@ -28,7 +28,9 @@ events_json = json.load(json_file)
 json_file.close()
 
 #Function to make a plot of signal, MC, and data with ratio panel below 
-def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjets_mc_weight, hh_ggbb_mc, hh_ggbb_mc_weight, ttgg_mc, ttgg_mc_weight, ttg_mc, ttg_mc_weight, ttbar_mc, ttbar_mc_weight, vh_mc, vh_mc_weight, wgamma_mc, wgamma_mc_weight, zgamma_mc, zgamma_mc_weight, tthh_ggbb, tthh_ggbb_weight, tthh_ggWW, tthh_ggWW_weight, tthh_ggTauTau, tthh_ggTauTau_weight, **kwargs):
+#def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjets_mc_weight, hh_ggbb_mc, hh_ggbb_mc_weight, ttgg_mc, ttgg_mc_weight, ttg_mc, ttg_mc_weight, ttbar_mc, ttbar_mc_weight, vh_mc, vh_mc_weight, wgamma_mc, wgamma_mc_weight, zgamma_mc, zgamma_mc_weight, tthh_ggbb, tthh_ggbb_weight, tthh_ggWW, tthh_ggWW_weight, tthh_ggTauTau, tthh_ggTauTau_weight, **kwargs):
+#def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjets_mc_weight, hh_ggbb_mc, hh_ggbb_mc_weight, ttgg_mc, ttgg_mc_weight, ttg_mc, ttg_mc_weight, vh_mc, vh_mc_weight, wgamma_mc, wgamma_mc_weight, zgamma_mc, zgamma_mc_weight, dd_gjets_qcd_mc, dd_gjets_qcd_mc_weight, tthh_ggbb, tthh_ggbb_weight, tthh_ggWW, tthh_ggWW_weight, tthh_ggTauTau, tthh_ggTauTau_weight, bins, **kwargs):
+def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjets_mc_weight, hh_ggbb_mc, hh_ggbb_mc_weight, ttgg_mc, ttgg_mc_weight, ttg_mc, ttg_mc_weight, vh_mc, vh_mc_weight, wgamma_mc, wgamma_mc_weight, zgamma_mc, zgamma_mc_weight, tthh_ggbb, tthh_ggbb_weight, tthh_ggWW, tthh_ggWW_weight, tthh_ggTauTau, tthh_ggTauTau_weight, **kwargs):
 
 	normalize = kwargs.get("normalize", False)
 	x_label = kwargs.get("x_label", None)
@@ -50,10 +52,11 @@ def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjet
 	h_hh_ggbb_mc = Hist1D(gg_mc, bins = bins, color = "orange", weights = hh_ggbb_mc_weight, label = "HH->ggbb")
 	h_ttgg_mc = Hist1D(gg_mc, bins = bins, color = "red", weights = ttgg_mc_weight, label = "TTGG")
 	h_ttg_mc = Hist1D(gg_mc, bins = bins, color = "purple", weights = ttg_mc_weight, label = "TTGamma")
-	h_ttbar_mc = Hist1D(gg_mc, bins = bins, color = "brown", weights = ttbar_mc_weight, label = "TTbar")
+#	h_ttbar_mc = Hist1D(gg_mc, bins = bins, color = "brown", weights = ttbar_mc_weight, label = "TTbar")
 	h_vh_mc = Hist1D(gg_mc, bins = bins, color = "pink", weights = vh_mc_weight, label = "VH")
 	h_wgamma_mc = Hist1D(gg_mc, bins = bins, color = "cyan", weights = wgamma_mc_weight, label = "W\u03B3")
 	h_zgamma_mc = Hist1D(gg_mc, bins = bins, color = "olive", weights = zgamma_mc_weight, label = "Z\u03B3")
+#	h_dd_gjets_qcd_mc = Hist1D(dd_gjets_qcd_mc, bins = bins, color = "brown", weights = dd_gjets_qcd_mc_weight, label = "DD Description GJets and QCD")
 	
 	#Signal 
 	h_tthh_ggbb = Hist1D(tthh_ggbb, bins = bins, color = "lawngreen", weights = tthh_ggbb_weight, label = "ttHH ->\u03B3 \u03B3bb (x$10^3$)")
@@ -108,8 +111,8 @@ def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjet
 #Processes:
 events_1lep_4jets_0tau = events[(events["n_leptons"] >= 1) & (events["n_jets"] >= 4) & (events["n_taus"] == 0)] #Semileptonic
 events_0lep_5jets_0tau = events[(events["n_leptons"] == 0) & (events["n_taus"] == 0) & (events["n_jets"] >= 5)] #Hadronic 
-eventds_2lep_0tau = events[(events["n_leptons"] == 2) & (events["n_taus"] == 0)] #Dileptonic
-events_1lep1tau_0lep2tau = events[(events["n_leptons"] == 1) & (events["n_taus"] == 1)] | events[(events["n_leptons"] == 0) & (events["n_taus"] == 2)] #Tau
+events_2lep_0tau = events[(events["n_leptons"] == 2) & (events["n_taus"] == 0)] #Dileptonic
+events_1lep1tau_0lep2tau = events[((events["n_leptons"] == 1) & (events["n_taus"] == 1)) | ((events["n_leptons"] == 0) & (events["n_taus"] == 2))] #Tau
 events_3leptau = events[events["n_lep_tau"] >= 3] #Multilepton/Tau
 
 #Get Data, MC, and Signal 
@@ -118,21 +121,24 @@ for events, presel_name in zip([events_1lep_4jets_0tau, events_0lep_5jets_0tau, 
 	#Data
 	events_data = events[events["process_id"] == events_json["sample_id_map"]["Data"]]
 	#MC
-	events_mc = events[(events["process_id"] == events_json["sample_id_map"]["GJets_HT-100To200"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-200To400"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-400To600"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-40To100"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-600ToInf"]) & (events["process_id"] == events_json["sample_id_map"]["Diphoton"]) & (events["process_id"] == events_json["sample_id_map"]["TTGamma"]) & (events["process_id"] == events_json["sample_id_map"]["TTGG"]) & (events["process_id"] == events_json["sample_id_map"]["Data"]) & (events["process_id"] == events_json["sample_id_map"]["HH_ggbb"]) & (events["process_id"] == events_json["sample_id_map"]["VH_M125"]) & (events["process_id"] == events_json["sample_id_map"]["WGamma"]) & (events["process_id"] == events_json["sample_id_map"]["ZGamma"])]
+#	events_mc = events[(events["process_id"] == events_json["sample_id_map"]["GJets_HT-100To200"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-200To400"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-400To600"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-40To100"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-600ToInf"]) & (events["process_id"] == events_json["sample_id_map"]["Diphoton"]) & (events["process_id"] == events_json["sample_id_map"]["TTGamma"]) & (events["process_id"] == events_json["sample_id_map"]["TTGG"]) & (events["process_id"] == events_json["sample_id_map"]["Data"]) & (events["process_id"] == events_json["sample_id_map"]["HH_ggbb"]) & (events["process_id"] == events_json["sample_id_map"]["VH_M125"]) & (events["process_id"] == events_json["sample_id_map"]["WGamma"]) & (events["process_id"] == events_json["sample_id_map"]["ZGamma"]) & (events["process_id"] == events_json["sample_id_map"]["DD_Description_GJetsQCD"])]
+#	events_mc = events[(events["process_id"] == events_json["sample_id_map"]["GJets_HT-100To200"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-200To400"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-400To600"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-40To100"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-600ToInf"]) & (events["process_id"] == events_json["sample_id_map"]["Diphoton"]) & (events["process_id"] == events_json["sample_id_map"]["TTGamma"]) & (events["process_id"] == events_json["sample_id_map"]["TTGG"])  & (events["process_id"] == events_json["sample_id_map"]["HH_ggbb"]) & (events["process_id"] == events_json["sample_id_map"]["VH_M125"]) & (events["process_id"] == events_json["sample_id_map"]["WGamma"]) & (events["process_id"] == events_json["sample_id_map"]["ZGamma"]) & (events["process_id"] == events_json["sample_id_map"]["DD_Description_GJetsQCD"])]
+	events_mc = events[(events["process_id"] == events_json["sample_id_map"]["GJets_HT-100To200"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-200To400"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-400To600"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-40To100"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-600ToInf"]) & (events["process_id"] == events_json["sample_id_map"]["Diphoton"]) & (events["process_id"] == events_json["sample_id_map"]["TTGamma"]) & (events["process_id"] == events_json["sample_id_map"]["TTGG"])  & (events["process_id"] == events_json["sample_id_map"]["HH_ggbb"]) & (events["process_id"] == events_json["sample_id_map"]["VH_M125"]) & (events["process_id"] == events_json["sample_id_map"]["WGamma"]) & (events["process_id"] == events_json["sample_id_map"]["ZGamma"])]
 	events_gg_mc = events[events["process_id"] == events_json["sample_id_map"]["Diphoton"]]
 	events_gjets_mc = events[(events["process_id"] == events_json["sample_id_map"]["GJets_HT-100To200"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-200To400"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-400To600"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-40To100"]) & (events["process_id"] == events_json["sample_id_map"]["GJets_HT-600ToInf"])]
 	events_hh_ggbb_mc = events[events["process_id"] == events_json["sample_id_map"]["HH_ggbb"]]
 	events_ttgg_mc = events[events["process_id"] == events_json["sample_id_map"]["TTGG"]]
 	events_ttg_mc = events[events["process_id"] == events_json["sample_id_map"]["TTGamma"]]
-	events_ttbar_mc = events[events["process_id"] == events_json["sample_id_map"]["Data"]]
+#	events_ttbar_mc = events[events["process_id"] == events_json["sample_id_map"]["Data"]]
 	events_vh_mc = events[events["process_id"] == events_json["sample_id_map"]["VH_M125"]]
 	events_wgamma_mc = events[events["process_id"] == events_json["sample_id_map"]["WGamma"]]
 	events_zgamma_mc = events[events["process_id"] == events_json["sample_id_map"]["ZGamma"]]
+#	events_dd_gjets_qcd_mc = events[events["process_id"] == events_json["sample_id_map"]["DD_Description_GJetsQCD"]]
 	#Signal
 	events_tthh = events[(events["process_id"] == events_json["sample_id_map"]["ttHH_ggbb"]) & (events["process_id"] == events_json["sample_id_map"]["ttHH_ggWW"]) & (events["process_id"] == events_json["sample_id_map"]["ttHH_ggTauTau"])]
 	events_tthh_ggbb = events[events["process_id"] == events_json["sample_id_map"]["ttHH_ggbb"]]
 	events_tthh_ggWW = events[events["process_id"] == events_json["sample_id_map"]["ttHH_ggWW"]]
-	events_tthh_TauTau = events[events["process_id"] == events_json["sample_id_map"]["ttHH_ggTauTau"]]
+	events_tthh_ggTauTau = events[events["process_id"] == events_json["sample_id_map"]["ttHH_ggTauTau"]]
 
 	#plots
 	plots = {
@@ -152,7 +158,7 @@ for events, presel_name in zip([events_1lep_4jets_0tau, events_0lep_5jets_0tau, 
 		"jet_1_btagDeepFlavB" : {"bins":"16,0,1", "x_label":"b-tag scores"}
 	}
 
-	for column, plot_info in plot.items(): 
+	for column, plot_info in plots.items(): 
 		#Data
 		data = events_data[column]
 		#MC
@@ -162,10 +168,16 @@ for events, presel_name in zip([events_1lep_4jets_0tau, events_0lep_5jets_0tau, 
 		hh_ggbb_mc = events_hh_ggbb_mc[column]
 		ttgg_mc = events_ttgg_mc[column]
 		ttg_mc = events_ttg_mc[column]
-		ttbar_mc = events_ttbar_mc[column]
-		
+#		ttbar_mc = events_ttbar_mc[column]
+		vh_mc = events_vh_mc[column]
+		wgamma_mc = events_wgamma_mc[column]
+		zgamma_mc = events_zgamma_mc[column]
+#		dd_gjets_qcd_mc = events_dd_gjets_qcd_mc[column]
 		#Signal
 		signal = events_tthh[column]
+		tthh_ggbb = events_tthh_ggbb[column]
+		tthh_ggWW = events_tthh_ggWW[column]
+		tthh_ggTauTau = events_tthh_ggTauTau[column]
 
 		plot_info["save_name"] = "/home/users/kmartine/public_html/plots/Spring_2022/log_%s_%s_dataMC.pdf" %(presel_name, column)
 
@@ -174,34 +186,37 @@ for events, presel_name in zip([events_1lep_4jets_0tau, events_0lep_5jets_0tau, 
 			data = data, 
 			#MC
 			mc = mc,
-			mc_weight = events_mc["weight"],
+			mc_weight = events_mc["weight_central"],
 			gg_mc = gg_mc,
-			gg_mc_weight = events_gg_mc["weight"],
+			gg_mc_weight = events_gg_mc["weight_central"],
 			gjets_mc = gjets_mc,
-			gjets_mc_weight = events_gjets_mc["weight"],
+			gjets_mc_weight = events_gjets_mc["weight_central"],
 			hh_ggbb_mc = hh_ggbb_mc,
-			hh_ggbb_mc_weight = events_hh_ggbb_mc["weight"],
+			hh_ggbb_mc_weight = events_hh_ggbb_mc["weight_central"],
 			ttgg_mc = ttgg_mc,
-			ttgg_mc_weight = events_ttgg_mc["weight"],
+			ttgg_mc_weight = events_ttgg_mc["weight_central"],
 			ttg_mc = ttg_mc,
-			ttg_mc_weight = events_ttg_mc["weight"],
-			ttbar_mc = ttbar_mc,
-			ttbar_mc_weight = events_ttbar_mc["weight"],
+			ttg_mc_weight = events_ttg_mc["weight_central"],
+#			ttbar_mc = ttbar_mc,
+#			ttbar_mc_weight = events_ttbar_mc["weight_central"],
 			vh_mc = vh_mc, 
-			vh_mc_weight = events_vh_mc["weight"], 
+			vh_mc_weight = events_vh_mc["weight_central"], 
 			wgamma_mc = wgamma_mc, 
-			wgamma_mc_weight = events_wgamma_mc["weight"], 
+			wgamma_mc_weight = events_wgamma_mc["weight_central"], 
 			zgamma_mc = zgamma_mc, 
-			zgamma_mc_weight = events_zgamma_mc["weight"], 
+			zgamma_mc_weight = events_zgamma_mc["weight_central"], 
+#			dd_gjets_qcd_mc = dd_gjets_qcd_mc,
+#			dd_gjets_qcd_mc_weight = events_dd_gjets_qcd_mc["weight_central"],
 			#Signal
 			signal = signal, 
-			signal_weight = events_tthh["weight"],
+			signal_weight = events_tthh["weight_central"],
 			tthh_ggbb = tthh_ggbb, 
-			tthh_ggbb_weight = events_tthh_ggbb["weight"], 
+			tthh_ggbb_weight = events_tthh_ggbb["weight_central"], 
 			tthh_ggWW = tthh_ggWW, 
-			tthh_ggWW_weight = events_tthh_ggWW["weight"], 
+			tthh_ggWW_weight = events_tthh_ggWW["weight_central"], 
 			tthh_ggTauTau = tthh_ggTauTau,
-			tthh_ggTauTau_weight = events_tthh_ggTauTau["weight"],
+			tthh_ggTauTau_weight = events_tthh_ggTauTau["weight_central"],
+#			bins = plots[column]["bins"],
 			**plot_info
 		)
 
