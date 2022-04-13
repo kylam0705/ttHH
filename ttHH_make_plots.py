@@ -30,7 +30,7 @@ json_file.close()
 #Function to make a plot of signal, MC, and data with ratio panel below 
 #def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjets_mc_weight, hh_ggbb_mc, hh_ggbb_mc_weight, ttgg_mc, ttgg_mc_weight, ttg_mc, ttg_mc_weight, ttbar_mc, ttbar_mc_weight, vh_mc, vh_mc_weight, wgamma_mc, wgamma_mc_weight, zgamma_mc, zgamma_mc_weight, tthh_ggbb, tthh_ggbb_weight, tthh_ggWW, tthh_ggWW_weight, tthh_ggTauTau, tthh_ggTauTau_weight, **kwargs):
 #def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjets_mc_weight, hh_ggbb_mc, hh_ggbb_mc_weight, ttgg_mc, ttgg_mc_weight, ttg_mc, ttg_mc_weight, vh_mc, vh_mc_weight, wgamma_mc, wgamma_mc_weight, zgamma_mc, zgamma_mc_weight, dd_gjets_qcd_mc, dd_gjets_qcd_mc_weight, tthh_ggbb, tthh_ggbb_weight, tthh_ggWW, tthh_ggWW_weight, tthh_ggTauTau, tthh_ggTauTau_weight, bins, **kwargs):
-def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjets_mc_weight, hh_ggbb_mc, hh_ggbb_mc_weight, ttgg_mc, ttgg_mc_weight, ttg_mc, ttg_mc_weight, vh_mc, vh_mc_weight, wgamma_mc, wgamma_mc_weight, zgamma_mc, zgamma_mc_weight, tthh_ggbb, tthh_ggbb_weight, tthh_ggWW, tthh_ggWW_weight, tthh_ggTauTau, tthh_ggTauTau_weight, **kwargs):
+def make_log_ratio_plot(data, mc, mc_weight, gg_mc, gg_mc_weight, gjets_mc, gjets_mc_weight, hh_ggbb_mc, hh_ggbb_mc_weight, ttgg_mc, ttgg_mc_weight, ttg_mc, ttg_mc_weight, vh_mc, vh_mc_weight, wgamma_mc, wgamma_mc_weight, zgamma_mc, zgamma_mc_weight, tthh_ggbb, tthh_ggbb_weight, tthh_ggWW, tthh_ggWW_weight, tthh_ggTauTau, tthh_ggTauTau_weight, bins, **kwargs):
 
 	normalize = kwargs.get("normalize", False)
 	x_label = kwargs.get("x_label", None)
@@ -216,7 +216,7 @@ for events, presel_name in zip([events_1lep_4jets_0tau, events_0lep_5jets_0tau, 
 			tthh_ggWW_weight = events_tthh_ggWW["weight_central"], 
 			tthh_ggTauTau = tthh_ggTauTau,
 			tthh_ggTauTau_weight = events_tthh_ggTauTau["weight_central"],
-#			bins = plots[column]["bins"],
+			bins = bins,
 			**plot_info
 		)
 
