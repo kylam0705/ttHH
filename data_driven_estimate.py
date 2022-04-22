@@ -91,12 +91,13 @@ n_bins = int((1-lower_range)/0.05) #This is the number of bins in the histogram 
 #  Plots
 f = plt.figure()
 h_fake_sideband_cut_to_one = Hist1D(fake_id, bins = "%d, %.1f, 1" %(n_bins, lower_range), overflow=False)
-h_fake_sideband_cut_to_one = h_fake_sideband_cut_to_one.normalize #This is a plot of the fake photons from GJets MC
+h_fake_sideband_cut_to_one = h_fake_sideband_cut_to_one.normalize() #This is a plot of the fake photons from GJets MC
 
 h_fake_minus_one_to_one = Hist1D(fake_id, bins = "100,-1,1", overflow = False)
 h_fake_minus_one_to_one = h_fake_minus_one_to_one.normalize()
 
-h_fake_minus_one_to_one.plot(label = "Fake ID PDF", color = 'blue', alpha = 0.8)
+h_fake_sideband_cut_to_one.plot(label = "Fake ID PDF, Full range", color = 'red', alpha = 0.8)
+h_fake_minus_one_to_one.plot(label = "Fake ID PDF, Half range", color = 'blue', alpha = 0.8)
 
 # Labels/Aesthetics
 plt.yscale("log")
@@ -124,7 +125,7 @@ def generate_from_fake_pdf(fake_pdf, n):
 # 4. Add data-driven events into preselection array
 # 4.1 Set their min photon ID MVA score equal to the values randomly generated according to the fake PDF
 generated_photon_id_scores = awkward.ones_like(sideband_events_data.LeadPhoton_mvaID) # dummy array of all 1's, you should update with your function for generating the scores
-generated_photon_id_scores = generate_from_fake_pdf(h_fake_minus_one_to_one, 100)
+generated_photon_id_scores = generate_from_fake_pdf(h_fake_sideband_cut_to_one, n_bins)
 sideband_events_data["MinPhoton_mvaID"] = generated_photon_id_scores
 
 # 4.2 Apply the per-event and overall normalization factors to the central weight of data sideband events
