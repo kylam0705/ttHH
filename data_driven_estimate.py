@@ -96,8 +96,8 @@ h_fake_sideband_cut_to_one = h_fake_sideband_cut_to_one.normalize() #This is a p
 h_fake_minus_one_to_one = Hist1D(fake_id, bins = "100,-1,1", overflow = False)
 h_fake_minus_one_to_one = h_fake_minus_one_to_one.normalize()
 
-h_fake_sideband_cut_to_one.plot(label = "Fake ID PDF, Full range", color = 'red', alpha = 0.8)
-h_fake_minus_one_to_one.plot(label = "Fake ID PDF, Half range", color = 'blue', alpha = 0.8)
+h_fake_sideband_cut_to_one.plot(label = "Fake ID PDF, Limited range", color = 'red', alpha = 0.8)
+h_fake_minus_one_to_one.plot(label = "Fake ID PDF, Full range", color = 'blue', alpha = 0.8)
 
 # Labels/Aesthetics
 plt.yscale("log")
