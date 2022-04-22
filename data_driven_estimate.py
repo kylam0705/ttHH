@@ -125,7 +125,7 @@ def generate_from_fake_pdf(fake_pdf, n):
 # 4. Add data-driven events into preselection array
 # 4.1 Set their min photon ID MVA score equal to the values randomly generated according to the fake PDF
 generated_photon_id_scores = awkward.ones_like(sideband_events_data.LeadPhoton_mvaID) # dummy array of all 1's, you should update with your function for generating the scores
-generated_photon_id_scores = generate_from_fake_pdf(h_fake_sideband_cut_to_one, n_bins)
+generated_photon_id_scores = generate_from_fake_pdf(h_fake_minus_one_to_one, 100)
 sideband_events_data["MinPhoton_mvaID"] = generated_photon_id_scores
 
 # 4.2 Apply the per-event and overall normalization factors to the central weight of data sideband events
