@@ -109,24 +109,48 @@ plt.show()
 f.savefig("/home/users/kmartine/public_html/plots/Fall_2021/fake_pdf_mvaid.pdf")
 
 # 3.3 Define a function for generating an arbitrary number of events from the fake pdf
+# create a dictionary to link each bin to its lowest score: 
+lowest_score = {}
+# Function:
 def generate_from_fake_pdf(fake_pdf, n): 
-    """
-    Returns a 1d array of length n of values generated from a binned probability distribution `fake_pdf`
-    """ 
-    Last_bin = n
-    First_bin = 0
+	"""
+	Returns a 1d array of length n of values generated from a binned probability distribution `fake_pdf`
+	""" 
+	#Create a dictionary to link each bin to its lowest score: 
+	for i in range(fake_pdf.nbins): 
+		lowest_score[i] = round(fake_pdf.edges[i],2)
 
-    p_bins = fake_pdf.counts[First_bin:Last_bin]
-    p = p_bins/numpy.sum(p_bins) #This normalizes the probabilities in case that wasn't already done
+	#These will be used for normalizing the p variable in numpy.random (if that's needed)
+	Last_bin = n
+	First_bin = 0
 
-    randomly_generated_scores = numpy.random.choice(a = n, size = awkward.size(sideband_events_data, axis=0), p = p) #Here, the random values are assigned from the sideband cut to the highest score in the histogram
-    return randomly_generated_scores 
+	#This normalizes the probabilties in case that wasn't already done
+	p_bins = fake_pdf.counts[First_bin:Last_bin]
+	p = p_bins/numpy.sum(p_bins) 
+
+	#This is an array of the bin numbers:
+	identifying_bins = numpy.random.choice(a=n, size=awkward.size(sideband_events_data, axis = 0), p = p)
+
+	#This will convert the array of bin numbers to the lowest score associated with that bin:
+	bin_scores = [lowest_score[key] for key in identifying_bins]
+
+	#Here, the random values, are assigned
+	randomly_generated_scores = bin_scores + numpy.random.uniform(low = 0, high = round(fake_pdf.bin_widths[1],3), size = identifying_bins.size) 
+	return randomly_generated_scores 
 
 # 4. Add data-driven events into preselection array
 # 4.1 Set their min photon ID MVA score equal to the values randomly generated according to the fake PDF
 generated_photon_id_scores = awkward.ones_like(sideband_events_data.LeadPhoton_mvaID) # dummy array of all 1's, you should update with your function for generating the scores
-generated_photon_id_scores = generate_from_fake_pdf(h_fake_minus_one_to_one, 100)
+generated_photon_id_scores = generate_from_fake_pdf(h_fake_sideband_cut_to_one,n_bins)
 sideband_events_data["MinPhoton_mvaID"] = generated_photon_id_scores
+
+
+for i in range(3): 
+	print("Min Photon ID in sideband: ", sideband_events_data["MinPhoton_mvaID"][i])
+print('...')
+for i in range(3):
+	print("Max Photon ID in sideband: ", sideband_events_data["MaxPhoton_mvaID"][i])
+print('...')
 
 # 4.2 Apply the per-event and overall normalization factors to the central weight of data sideband events
 # 4.2.A Find the per-event scale factor
