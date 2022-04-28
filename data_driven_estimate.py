@@ -133,6 +133,8 @@ def generate_from_fake_pdf(fake_pdf, n):
 
 	#This will convert the array of bin numbers to the lowest score associated with that bin:
 	bin_scores = [lowest_score[key] for key in identifying_bins]
+	bin_scores = numpy.array(bin_scores)
+	bin_scores = awkward.from_numpy(bin_scores)
 
 	#Here, the random values, are assigned
 	randomly_generated_scores = bin_scores + numpy.random.uniform(low = 0, high = round(fake_pdf.bin_widths[1],3), size = identifying_bins.size) 
