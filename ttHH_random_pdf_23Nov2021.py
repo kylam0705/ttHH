@@ -174,8 +174,8 @@ rescaled_events = [hist_idmva_low[key] for key in random_choice_function]
 f_rescaled_events_array = numpy.array(rescaled_events)
 size_new = f_rescaled_events_array.size
 s_rescaled_events_array = f_rescaled_events_array + numpy.random.uniform(low = 0, high = round(h_weight.bin_widths[1],3), size = size_new) #This array allocates a score to an event based on the bin value
-print("first rescaled_events_array", f_rescaled_events_array)
-print("second rescaled_events_array", s_rescaled_events_array)
+print("Numpy.random.choice, which takes the p values from h_weight", f_rescaled_events_array)
+print("Takes the previous array and adds numpy.random.uniform", s_rescaled_events_array)
 
 #Histograms
 fig = plt.figure()
@@ -226,7 +226,7 @@ new_weight = original_weight * omega
 #print("original_weight", original_weight)
 #print("new_weight", new_weight)
 
-print(events_awkward.fields, "events_awkward.fields")
+#print(events_awkward.fields, "events_awkward.fields")
 
 #Total Normational
 n_total_bkg = 0
@@ -240,13 +240,13 @@ n_data = sum(events_data_ak.weight_central)
 
 n_GJets = n_data - n_total_bkg
 scale_factor = sum(events_awkward.weight_central) / n_GJets
-print(scale_factor)
+#print(scale_factor)
 
 total_normal_weight = new_weight * scale_factor
-print(total_normal_weight, "total_normal_weight")
+#print(total_normal_weight, "total_normal_weight")
 
-print(len(plotted_pdf), "plotted_pdf")
-print(len(data_in_sideband_ak), "length of events reinserted into preselection")
+#print(len(plotted_pdf), "plotted_pdf")
+#print(len(data_in_sideband_ak), "length of events reinserted into preselection")
 
 #Concat to new parquet file
 #events_dd should have all the same fields as events_awkward with the fields "MinPhoton_mvaID", "process_id", and "weight_central" (per events and overall normalization factor) updated
